@@ -15,6 +15,7 @@ public class CobertoUtilities implements ModInitializer {
 	public void onInitialize() {
 		com.thecoberto.utilities.crates.Crates.registerBlocks();
 		MobMoney.registerEvents();
+		com.thecoberto.utilities.classes.Classes.registerEvents();
 		com.thecoberto.utilities.zones.AdventureZones.registerEvents();
 		ActivityRewards.registerEvents();
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
@@ -24,6 +25,7 @@ public class CobertoUtilities implements ModInitializer {
 			ActivityRewards.register(dispatcher);
 			com.thecoberto.utilities.crates.Crates.register(dispatcher, registryAccess);
 			com.thecoberto.utilities.zones.AdventureZones.register(dispatcher);
+			com.thecoberto.utilities.classes.Classes.register(dispatcher);
 		});
 	}
 
