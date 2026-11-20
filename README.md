@@ -42,6 +42,9 @@ Java Edition port of [coberto-utilities](https://github.com/TheCoberto/coberto-u
   | Druid | Regeneration I while standing on grass, dirt, moss, logs or leaves. |
   | Necromancer | Immune to Wither. Melee hits wither enemies (Wither I, 4 seconds). Killing a mob gives Absorption I for 30 seconds. |
   | Vampire | Melee hits heal you half a heart. At night: Night Vision, Strength I and Speed I. In daylight under the open sky: Weakness I and Slowness I. |
+- **Music Selector:** a block (in the creative inventory under Functional Blocks) for spawn or an adventure zone. Players use it to pay `Money` and queue a song. It works like a jukebox: songs play from the selector and are only heard nearby. Each selector has its own queue and a floating "Now Playing: Cat" label above it, so different areas can play different music. Each player waits 2:30 between queueing songs (at any selector), and a song can't be queued twice in the same queue. Operators get Settings, Skip and Stop buttons in the selector's menu, or use `/music` for settings and `/musicskip` to skip the song at the nearest selector. Settings apply to every selector: the price (500 by default, with optional per-song prices), the cooldown, the queue size, which songs can be queued, and an **autoplay loop** (in order or shuffled, from songs they pick) that plays at each selector when nobody has queued anything. Settings are saved in the world; queues reset when the world restarts.
+
+  The songs are every music disc in the game, plus any jukebox songs added by data packs, which show up automatically.
 - **Adventure Zones:** areas where players are switched to Adventure mode, and back to Survival when they leave. This replaces command blocks that change players within a radius. Players inside also get the `inside_adventure_zone` tag, so the Teams mod blocks PvP there. Only players in Survival are changed, so operators in Creative or Spectator are left alone. With no zones, it does nothing. Operator commands:
   - `/zonecreate <name> <radius> [allHeights]` makes a zone centered where you stand (or at a command block). `allHeights` true ignores height, like a column; otherwise it's a sphere.
   - `/zones` lists the zones. `/zonedelete <name>` deletes one.
@@ -59,6 +62,7 @@ Requires Minecraft Java **1.21.1**, [Fabric Loader](https://fabricmc.net/use/) a
 - `/crates` uses clickable chat instead of a menu (Java has no forms). The block ids are the same: `coberto:crate`, `coberto:spooky_crate` and `coberto:holiday_crate`.
 - Adventure Zones only take away the `inside_adventure_zone` tag and Adventure mode they gave out themselves, so they don't fight with command blocks or other tools that use the same tag.
 - The `/class` menu is a chest-style screen: hover over a class to read it, click to pick it. Java has no NPC buttons, so give players classes with `/setclass @p <class>` on a command block button or sign instead of `@initiator`.
+- The Music Selector menu is a chest-style screen (click a disc to queue it), and `/music` settings use clickable chat. Tears and Lava Chicken aren't in Minecraft Java 1.21.1, so they aren't listed. Custom songs come from data packs (a `jukebox_song` plus a resource pack sound) instead of `custom_songs.js`.
 - Creeper anti-grief only affects creepers. Java's `mobGriefing` game rule still works as normal for every mob, creepers included.
 
 ## Build

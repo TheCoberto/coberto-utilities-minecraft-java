@@ -30,6 +30,14 @@ public final class Money {
 		scoreboard.getOrCreateScore(player, objective).incrementScore(amount);
 	}
 
+	public static int get(ServerPlayerEntity player) {
+		ServerScoreboard scoreboard = player.server.getScoreboard();
+		ScoreboardObjective objective = scoreboard.getNullableObjective(OBJECTIVE);
+		if (objective == null) return 0;
+		var score = scoreboard.getScore(player, objective);
+		return score == null ? 0 : score.getScore();
+	}
+
 	public static String format(long n) {
 		return NumberFormat.getIntegerInstance(Locale.US).format(n);
 	}
