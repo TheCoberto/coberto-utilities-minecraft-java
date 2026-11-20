@@ -13,6 +13,7 @@ import net.minecraft.util.Formatting;
 public class CobertoUtilities implements ModInitializer {
 	@Override
 	public void onInitialize() {
+		com.thecoberto.utilities.crates.Crates.registerBlocks();
 		MobMoney.registerEvents();
 		ActivityRewards.registerEvents();
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
@@ -20,6 +21,7 @@ public class CobertoUtilities implements ModInitializer {
 			GamemodeShortcuts.register(dispatcher);
 			MobMoney.register(dispatcher, registryAccess);
 			ActivityRewards.register(dispatcher);
+			com.thecoberto.utilities.crates.Crates.register(dispatcher, registryAccess);
 		});
 	}
 

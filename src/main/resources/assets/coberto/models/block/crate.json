@@ -1,0 +1,7 @@
+{
+	"parent": "minecraft:block/cube_column",
+	"textures": {
+		"end": "coberto:block/crate_top",
+		"side": "coberto:block/crate_side"
+	}
+}
