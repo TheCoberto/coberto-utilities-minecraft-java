@@ -23,6 +23,10 @@ Java Edition port of [coberto-utilities](https://github.com/TheCoberto/coberto-u
   - `/crates <crate> remove <item>` removes it.
   - `/crates <crate> items <least> <most>` sets how many items a crate gives.
   - `/crates <crate> reset` puts the defaults back.
+- **Adventure Zones:** areas where players are switched to Adventure mode, and back to Survival when they leave. This replaces command blocks that change players within a radius. Players inside also get the `inside_adventure_zone` tag, so the Teams mod blocks PvP there. Only players in Survival are changed, so operators in Creative or Spectator are left alone. With no zones, it does nothing. Operator commands:
+  - `/zonecreate <name> <radius> [allHeights]` makes a zone centered where you stand (or at a command block). `allHeights` true ignores height, like a column; otherwise it's a sphere.
+  - `/zones` lists the zones. `/zonedelete <name>` deletes one.
+  - `/zone <name>` shows clickable settings to rename the zone, turn it on or off, change its radius or height setting, move its center to where you stand, set the enter and leave messages (shown above the hotbar; `{player}`, `{zone}` and `&` colors work; `none` for no message) or delete it. Each is also a command, like `/zone spawn radius 40` or `/zone spawn entermessage &aWelcome to {zone}!`.
 
 All settings are saved in the world.
 
@@ -34,6 +38,7 @@ Requires Minecraft Java **1.21.1**, [Fabric Loader](https://fabricmc.net/use/) a
 - Commands have no `ev:` prefix: `/creepergriefing` and `/gmc` instead of `/ev:creepergriefing` and `/ev:gmc`.
 - Sounds use Java names: `/activitysound entity.experience_orb.pickup` rather than `random.orb`. The message doesn't need quotes.
 - `/crates` uses clickable chat instead of a menu (Java has no forms). The block ids are the same: `coberto:crate`, `coberto:spooky_crate` and `coberto:holiday_crate`.
+- Adventure Zones only take away the `inside_adventure_zone` tag and Adventure mode they gave out themselves, so they don't fight with command blocks or other tools that use the same tag.
 - Creeper anti-grief only affects creepers. Java's `mobGriefing` game rule still works as normal for every mob, creepers included.
 
 ## Build
