@@ -3,7 +3,7 @@
 	"id": "coberto_utilities",
 	"version": "${version}",
 	"name": "Coberto's Utilities",
-	"description": "World utilities: creeper anti-grief and gamemode shortcuts (/gms, /gmc, /gma, /gmsp).",
+	"description": "World utilities: creeper anti-grief, gamemode shortcuts (/gms, /gmc, /gma, /gmsp), Mob Money, and Activity Rewards with AFK detection.",
 	"authors": ["TheCoberto"],
 	"contact": { "sources": "https://github.com/TheCoberto/coberto-utilities-minecraft-java" },
 	"license": "All-Rights-Reserved",

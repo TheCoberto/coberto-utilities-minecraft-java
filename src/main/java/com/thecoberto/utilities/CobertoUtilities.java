@@ -13,9 +13,13 @@ import net.minecraft.util.Formatting;
 public class CobertoUtilities implements ModInitializer {
 	@Override
 	public void onInitialize() {
+		MobMoney.registerEvents();
+		ActivityRewards.registerEvents();
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			CreeperGriefing.register(dispatcher);
 			GamemodeShortcuts.register(dispatcher);
+			MobMoney.register(dispatcher, registryAccess);
+			ActivityRewards.register(dispatcher);
 		});
 	}
 
