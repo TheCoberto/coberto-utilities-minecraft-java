@@ -1,0 +1,7 @@
+{
+	"required": true,
+	"package": "com.thecoberto.utilities.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"mixins": ["CreeperEntityMixin"],
+	"injectors": { "defaultRequire": 1 }
+}

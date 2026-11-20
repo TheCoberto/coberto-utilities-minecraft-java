@@ -1,0 +1,14 @@
+pluginManagement {
+	repositories {
+		maven { url = 'https://maven.fabricmc.net/' }
+		mavenCentral()
+		gradlePluginPortal()
+	}
+}
+
+plugins {
+	// Downloads JDK 21 for the Java toolchain if it isn't installed.
+	id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+}
+
+rootProject.name = 'coberto-utilities-minecraft-java'

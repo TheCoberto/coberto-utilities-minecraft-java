@@ -1,0 +1,19 @@
+{
+	"schemaVersion": 1,
+	"id": "coberto_utilities",
+	"version": "${version}",
+	"name": "Coberto's Utilities",
+	"description": "World utilities: creeper anti-grief and gamemode shortcuts (/gms, /gmc, /gma, /gmsp).",
+	"authors": ["TheCoberto"],
+	"contact": { "sources": "https://github.com/TheCoberto/coberto-utilities-minecraft-java" },
+	"license": "All-Rights-Reserved",
+	"environment": "*",
+	"entrypoints": { "main": ["com.thecoberto.utilities.CobertoUtilities"] },
+	"mixins": ["coberto_utilities.mixins.json"],
+	"depends": {
+		"fabricloader": ">=0.16.0",
+		"minecraft": "~1.21.1",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
