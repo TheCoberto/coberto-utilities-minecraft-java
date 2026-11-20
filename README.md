@@ -1,7 +1,7 @@
 # Coberto's Utilities
 **Minecraft Java Coberto's Utilities Mod (Fabric)**
 
-Java Edition port of [coberto-utilities](https://github.com/TheCoberto/coberto-utilities) for Bedrock, a bundle of world utilities. Features are being ported a few at a time:
+Java Edition port of [coberto-utilities](https://github.com/TheCoberto/coberto-utilities) for Bedrock, a bundle of world utilities:
 
 - **Creeper anti-grief:** creeper explosions still hurt players and mobs but don't break blocks. Operators can change this with `/creepergriefing true` (creepers break blocks) or `false`. Run it with no value to see the current setting. Saved in the world.
 - **Gamemode shortcuts:** operators can use `/gms`, `/gmc`, `/gma` and `/gmsp` (Survival, Creative, Adventure, Spectator) instead of `/gamemode <mode>`. Add players to change someone else, like `/gmc @a`.
@@ -45,6 +45,7 @@ Java Edition port of [coberto-utilities](https://github.com/TheCoberto/coberto-u
 - **Music Selector:** a block (in the creative inventory under Functional Blocks) for spawn or an adventure zone. Players use it to pay `Money` and queue a song. It works like a jukebox: songs play from the selector and are only heard nearby. Each selector has its own queue and a floating "Now Playing: Cat" label above it, so different areas can play different music. Each player waits 2:30 between queueing songs (at any selector), and a song can't be queued twice in the same queue. Operators get Settings, Skip and Stop buttons in the selector's menu, or use `/music` for settings and `/musicskip` to skip the song at the nearest selector. Settings apply to every selector: the price (500 by default, with optional per-song prices), the cooldown, the queue size, which songs can be queued, and an **autoplay loop** (in order or shuffled, from songs they pick) that plays at each selector when nobody has queued anything. Settings are saved in the world; queues reset when the world restarts.
 
   The songs are every music disc in the game, plus any jukebox songs added by data packs, which show up automatically.
+- **Prank Button:** a big red button (in the creative inventory under Functional Blocks) with a floating sign above it that says "Don't Push This Button". Whoever pushes it gets pranked: an anvil shower (dropped from up to 100 blocks while the player is held in place until they land, with an option for anvils that kill even through netherite armor; the anvils disappear after 30 seconds), a launch into the sky (with or without slow falling, up to 500 blocks high, into space, with an adjustable slow-fall time), lightning, a cobweb trap, a killer chicken swarm (clucking chickens that chase and peck the player, and can kill them, then vanish), fake TNT, a teleport, a scrambled hotbar, spooky darkness, or a random one. The player who placed it (or an operator) sneaks and uses it with an empty hand to change the message, the prank, the cooldown, whether they're safe from their own button, and whether chat says who pushed it. The settings show in chat; click to change them, or use `/prankbutton <x y z> <setting> <value>`.
 - **Adventure Zones:** areas where players are switched to Adventure mode, and back to Survival when they leave. This replaces command blocks that change players within a radius. Players inside also get the `inside_adventure_zone` tag, so the Teams mod blocks PvP there. Only players in Survival are changed, so operators in Creative or Spectator are left alone. With no zones, it does nothing. Operator commands:
   - `/zonecreate <name> <radius> [allHeights]` makes a zone centered where you stand (or at a command block). `allHeights` true ignores height, like a column; otherwise it's a sphere.
   - `/zones` lists the zones. `/zonedelete <name>` deletes one.
@@ -63,6 +64,7 @@ Requires Minecraft Java **1.21.1**, [Fabric Loader](https://fabricmc.net/use/) a
 - Adventure Zones only take away the `inside_adventure_zone` tag and Adventure mode they gave out themselves, so they don't fight with command blocks or other tools that use the same tag.
 - The `/class` menu is a chest-style screen: hover over a class to read it, click to pick it. Java has no NPC buttons, so give players classes with `/setclass @p <class>` on a command block button or sign instead of `@initiator`.
 - The Music Selector menu is a chest-style screen (click a disc to queue it), and `/music` settings use clickable chat. Tears and Lava Chicken aren't in Minecraft Java 1.21.1, so they aren't listed. Custom songs come from data packs (a `jukebox_song` plus a resource pack sound) instead of `custom_songs.js`.
+- The Prank Button's setup is clickable chat instead of a form. Its killer chickens are ordinary chickens steered by the mod. Fake TNT doesn't shake the camera (Java has no camera shake).
 - Creeper anti-grief only affects creepers. Java's `mobGriefing` game rule still works as normal for every mob, creepers included.
 
 ## Build

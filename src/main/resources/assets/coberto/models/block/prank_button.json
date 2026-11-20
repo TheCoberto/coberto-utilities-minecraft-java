@@ -1,0 +1,31 @@
+{
+	"parent": "minecraft:block/block",
+	"textures": {
+		"particle": "minecraft:block/redstone_block",
+		"base": "minecraft:block/stone",
+		"cap": "minecraft:block/redstone_block"
+	},
+	"elements": [
+		{
+			"from": [3, 0, 3], "to": [13, 2, 13],
+			"faces": {
+				"north": { "uv": [3, 14, 13, 16], "texture": "#base" },
+				"south": { "uv": [3, 14, 13, 16], "texture": "#base" },
+				"east": { "uv": [3, 14, 13, 16], "texture": "#base" },
+				"west": { "uv": [3, 14, 13, 16], "texture": "#base" },
+				"up": { "uv": [3, 3, 13, 13], "texture": "#base" },
+				"down": { "uv": [3, 3, 13, 13], "texture": "#base", "cullface": "down" }
+			}
+		},
+		{
+			"from": [5, 2, 5], "to": [11, 5, 11],
+			"faces": {
+				"north": { "uv": [5, 5, 11, 8], "texture": "#cap" },
+				"south": { "uv": [5, 5, 11, 8], "texture": "#cap" },
+				"east": { "uv": [5, 5, 11, 8], "texture": "#cap" },
+				"west": { "uv": [5, 5, 11, 8], "texture": "#cap" },
+				"up": { "uv": [5, 5, 11, 11], "texture": "#cap" }
+			}
+		}
+	]
+}

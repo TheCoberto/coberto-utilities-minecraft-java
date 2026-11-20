@@ -16,6 +16,9 @@ public class CobertoUtilities implements ModInitializer {
 		com.thecoberto.utilities.crates.Crates.registerBlocks();
 		com.thecoberto.utilities.music.MusicSelector.registerBlocks();
 		com.thecoberto.utilities.music.MusicSelector.registerEvents();
+		Tasks.registerEvents();
+		com.thecoberto.utilities.prank.PrankButton.registerBlocks();
+		com.thecoberto.utilities.prank.PrankButton.registerEvents();
 		MobMoney.registerEvents();
 		com.thecoberto.utilities.classes.Classes.registerEvents();
 		com.thecoberto.utilities.zones.AdventureZones.registerEvents();
@@ -29,6 +32,7 @@ public class CobertoUtilities implements ModInitializer {
 			com.thecoberto.utilities.zones.AdventureZones.register(dispatcher);
 			com.thecoberto.utilities.classes.Classes.register(dispatcher);
 			com.thecoberto.utilities.music.MusicSelector.register(dispatcher);
+			com.thecoberto.utilities.prank.PrankButton.register(dispatcher);
 		});
 	}
 
