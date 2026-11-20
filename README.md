@@ -18,16 +18,22 @@ Java Edition port of [coberto-utilities](https://github.com/TheCoberto/coberto-u
   - `/activitymessage <message>` sets the chat message. `{amount}`, `{player}` and `{minutes}` are filled in, and `&` color codes work (like `&a`). `reset` goes back to the default.
   - `/activitysound <sound>` sets the sound played with the message (default `entity.player.levelup`), or `none`.
   - `/afk true|false` turns AFK detection on or off. `/afktime <seconds>` sets how long before someone is AFK (default 300).
+- **Loot crates:** Crate, Spooky Crate and Holiday Crate blocks (in the creative inventory under Functional Blocks) to hide around the map for events. Using one pops out random loot (diamonds, emeralds, gold, golden carrots, totems, shulker boxes and, very rarely, an Elytra or mace parts; Spooky Crates add pumpkins and jack o'lanterns, Holiday Crates cookies and snowballs) and the crate disappears. Finding an Elytra or Heavy Core is announced to everyone. Breaking a crate gives nothing, and explosions can't break them. Operators change each crate with `/crates`, which lists them in chat; click one to see its loot with each item's chance, then click to change or remove items. Or type the commands:
+  - `/crates <crate> add <item> <weight> [min] [max]` adds an item, or changes one the crate already has. Weight is how often it comes up compared to the others (0 = never).
+  - `/crates <crate> remove <item>` removes it.
+  - `/crates <crate> items <least> <most>` sets how many items a crate gives.
+  - `/crates <crate> reset` puts the defaults back.
 
 All settings are saved in the world.
 
 World Cleanup, Teams and the Slot Machine, also part of the Bedrock bundle, are separate Java mods: [world-cleanup-minecraft-java](https://github.com/TheCoberto/world-cleanup-minecraft-java), [teams-minecraft-java](https://github.com/TheCoberto/teams-minecraft-java) and [slot-machine-minecraft-java](https://github.com/TheCoberto/slot-machine-minecraft-java). Transfer Player isn't needed: Java has a built-in `/transfer` command.
 
-Requires Minecraft Java **1.21.1**, [Fabric Loader](https://fabricmc.net/use/) and [Fabric API](https://modrinth.com/mod/fabric-api). Server-side: it has to be installed on the server (or in single player). Players who join don't need it.
+Requires Minecraft Java **1.21.1**, [Fabric Loader](https://fabricmc.net/use/) and [Fabric API](https://modrinth.com/mod/fabric-api). Because it adds blocks (the loot crates), it has to be installed on the server **and** by every player who joins.
 
 ## Differences from the Bedrock version
 - Commands have no `ev:` prefix: `/creepergriefing` and `/gmc` instead of `/ev:creepergriefing` and `/ev:gmc`.
 - Sounds use Java names: `/activitysound entity.experience_orb.pickup` rather than `random.orb`. The message doesn't need quotes.
+- `/crates` uses clickable chat instead of a menu (Java has no forms). The block ids are the same: `coberto:crate`, `coberto:spooky_crate` and `coberto:holiday_crate`.
 - Creeper anti-grief only affects creepers. Java's `mobGriefing` game rule still works as normal for every mob, creepers included.
 
 ## Build
