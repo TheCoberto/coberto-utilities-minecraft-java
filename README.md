@@ -23,6 +23,25 @@ Java Edition port of [coberto-utilities](https://github.com/TheCoberto/coberto-u
   - `/crates <crate> remove <item>` removes it.
   - `/crates <crate> items <least> <most>` sets how many items a crate gives.
   - `/crates <crate> reset` puts the defaults back.
+- **Classes:** players get one of 15 classes, each with lasting effects and some with abilities. One class at a time; picking another replaces it. The class is saved with the world and kept through death. Operators pick their own class from a menu with `/class`, and set anyone's with `/setclass <players> <class>` (or `none`), which also works from command blocks and signs.
+
+  | Class | What it does |
+  | --- | --- |
+  | Warrior | Strength I and Haste I. |
+  | Acrobat | Speed II and Jump Boost II. Never takes fall damage. |
+  | Ghoul | Night Vision and Oozing. At night: Strength II, Speed I and Regeneration I. In daylight under the open sky: Weakness I. |
+  | Pyro | Fire Resistance. With something in your off-hand, your melee hits set enemies on fire. |
+  | Aquarian | Water Breathing. In water: Conduit Power and Dolphin's Grace. |
+  | Glider | Speed I. Falls slowly while in the air (sneak to drop fast). |
+  | Paladin | Resistance I. Melee hits on undead mobs deal 4 extra damage and heal you 1 heart. |
+  | Sentinel | Resistance III while sneaking. Anyone who hits you in melee takes 2 damage back. |
+  | Miner | Haste II. Night Vision while below Y 50. |
+  | Tank | Resistance II and Slowness I. |
+  | Plaguebearer | Immune to Poison. Melee hits poison enemies (Poison II, 4 seconds). |
+  | Bard | Hero of the Village (better trades). Gives Regeneration I and Speed I to you and every player within 8 blocks. |
+  | Druid | Regeneration I while standing on grass, dirt, moss, logs or leaves. |
+  | Necromancer | Immune to Wither. Melee hits wither enemies (Wither I, 4 seconds). Killing a mob gives Absorption I for 30 seconds. |
+  | Vampire | Melee hits heal you half a heart. At night: Night Vision, Strength I and Speed I. In daylight under the open sky: Weakness I and Slowness I. |
 - **Adventure Zones:** areas where players are switched to Adventure mode, and back to Survival when they leave. This replaces command blocks that change players within a radius. Players inside also get the `inside_adventure_zone` tag, so the Teams mod blocks PvP there. Only players in Survival are changed, so operators in Creative or Spectator are left alone. With no zones, it does nothing. Operator commands:
   - `/zonecreate <name> <radius> [allHeights]` makes a zone centered where you stand (or at a command block). `allHeights` true ignores height, like a column; otherwise it's a sphere.
   - `/zones` lists the zones. `/zonedelete <name>` deletes one.
@@ -39,6 +58,7 @@ Requires Minecraft Java **1.21.1**, [Fabric Loader](https://fabricmc.net/use/) a
 - Sounds use Java names: `/activitysound entity.experience_orb.pickup` rather than `random.orb`. The message doesn't need quotes.
 - `/crates` uses clickable chat instead of a menu (Java has no forms). The block ids are the same: `coberto:crate`, `coberto:spooky_crate` and `coberto:holiday_crate`.
 - Adventure Zones only take away the `inside_adventure_zone` tag and Adventure mode they gave out themselves, so they don't fight with command blocks or other tools that use the same tag.
+- The `/class` menu is a chest-style screen: hover over a class to read it, click to pick it. Java has no NPC buttons, so give players classes with `/setclass @p <class>` on a command block button or sign instead of `@initiator`.
 - Creeper anti-grief only affects creepers. Java's `mobGriefing` game rule still works as normal for every mob, creepers included.
 
 ## Build
