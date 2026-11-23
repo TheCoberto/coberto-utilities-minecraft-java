@@ -1,0 +1,19 @@
+name: CobertoUtilities
+version: '${version}'
+main: com.thecoberto.utilities.CobertoUtilities
+api-version: '1.21'
+description: Coberto's Utilities for Paper servers. Classes, with more to come.
+author: TheCoberto
+commands:
+  class:
+    description: Choose your class from a menu
+    usage: /class
+    permission: cobertoutilities.classes.admin
+  setclass:
+    description: Set players' class (none removes it)
+    usage: /setclass <players> <class|none>
+    permission: cobertoutilities.classes.admin
+permissions:
+  cobertoutilities.classes.admin:
+    description: Use /class and /setclass
+    default: op
