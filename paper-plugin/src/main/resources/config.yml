@@ -1,0 +1,11 @@
+# Coberto's Utilities. Feature settings are changed with commands and saved in
+# their own files here (activity.yml, crates.yml, music.yml, prank.yml).
+
+# The vanilla block each special block places (players have no mods, so there
+# are no new blocks). Blocks already placed keep theirs.
+blocks:
+  crate: BARREL
+  spooky_crate: CARVED_PUMPKIN
+  holiday_crate: SNOW_BLOCK
+  music_selector: JUKEBOX
+  prank_button: CRIMSON_BUTTON

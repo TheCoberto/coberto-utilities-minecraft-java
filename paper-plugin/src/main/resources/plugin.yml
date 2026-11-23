@@ -2,7 +2,8 @@ name: CobertoUtilities
 version: '${version}'
 main: com.thecoberto.utilities.CobertoUtilities
 api-version: '1.21'
-description: Coberto's Utilities for Paper servers. Classes, with more to come.
+softdepend: [Vault, Essentials]
+description: Coberto's Utilities for Paper servers. Classes, Activity Rewards, Loot Crates, the Music Selector and the Prank Button.
 author: TheCoberto
 commands:
   class:
@@ -13,7 +14,45 @@ commands:
     description: Set players' class (none removes it)
     usage: /setclass <players> <class|none>
     permission: cobertoutilities.classes.admin
+  utilitiesgive:
+    description: Give a Crate, Music Selector or Prank Button
+    usage: /utilitiesgive <crate|spooky_crate|holiday_crate|music_selector|prank_button> [player] [amount]
+    permission: cobertoutilities.admin
+  activity:
+    description: Turn Activity Rewards on or off, or see the settings
+    usage: /activity [true|false]
+    permission: cobertoutilities.admin
+  activityreward:
+    description: Set the Activity Reward
+    usage: /activityreward <amount> <minutes>
+    permission: cobertoutilities.admin
+  activitymessage:
+    description: Set the Activity Reward message ({amount}, {player}, {minutes}, & colors)
+    usage: /activitymessage <message|reset>
+    permission: cobertoutilities.admin
+  activitysound:
+    description: Set the Activity Reward sound
+    usage: /activitysound <sound|none>
+    permission: cobertoutilities.admin
+  crates:
+    description: See and change what loot crates drop
+    usage: /crates [crate] [add <item> <weight> [min] [max]|remove <item>|items <least> <most>|reset]
+    permission: cobertoutilities.admin
+  music:
+    description: Music Selector settings
+    usage: /music [price|cooldown|maxqueue|autoplay|shuffle|songs|allow|playlist|songprice|stopall]
+    permission: cobertoutilities.admin
+  musicskip:
+    description: Skip the song at the nearest Music Selector
+    usage: /musicskip
+    permission: cobertoutilities.admin
+  prankbutton:
+    description: Change a Prank Button (its owner or an operator)
+    usage: /prankbutton <x> <y> <z> [setting] [value]
 permissions:
+  cobertoutilities.admin:
+    description: Give special blocks and change Activity Rewards, crates, music and any Prank Button
+    default: op
   cobertoutilities.classes.admin:
     description: Use /class and /setclass
     default: op
