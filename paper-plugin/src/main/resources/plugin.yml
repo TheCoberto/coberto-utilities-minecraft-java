@@ -3,7 +3,7 @@ version: '${version}'
 main: com.thecoberto.utilities.CobertoUtilities
 api-version: '1.21'
 softdepend: [Vault, Essentials]
-description: Coberto's Utilities for Paper servers. Classes, Activity Rewards, Loot Crates, the Music Selector and the Prank Button.
+description: Coberto's Utilities for Paper servers. Classes, Activity Rewards, Loot Crates, the Music Selector, the Prank Button and World Cleanup.
 author: TheCoberto
 commands:
   class:
@@ -45,6 +45,10 @@ commands:
   musicskip:
     description: Skip the song at the nearest Music Selector
     usage: /musicskip
+    permission: cobertoutilities.admin
+  cleanup:
+    description: Clear hostile mobs, arrows, XP orbs and dropped items in every world
+    usage: /cleanup
     permission: cobertoutilities.admin
   prankbutton:
     description: Change a Prank Button (its owner or an operator)
