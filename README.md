@@ -53,7 +53,7 @@ Java Edition port of [coberto-utilities](https://github.com/TheCoberto/coberto-u
 
 All settings are saved in the world.
 
-World Cleanup, Teams and the Slot Machine, also part of the Bedrock bundle, are separate Java mods: [world-cleanup-minecraft-java](https://github.com/TheCoberto/world-cleanup-minecraft-java), [teams-minecraft-java](https://github.com/TheCoberto/teams-minecraft-java) and [slot-machine-minecraft-java](https://github.com/TheCoberto/slot-machine-minecraft-java). Transfer Player isn't needed: Java has a built-in `/transfer` command.
+World Cleanup, Teams and the Slot Machine, also part of the Bedrock bundle, are separate Java mods: [world-cleanup-minecraft-java](https://github.com/TheCoberto/world-cleanup-minecraft-java), [teams-minecraft-java](https://github.com/TheCoberto/teams-minecraft-java) and [mystical-slots-minecraft-java](https://github.com/TheCoberto/mystical-slots-minecraft-java). Transfer Player isn't needed: Java has a built-in `/transfer` command.
 
 Requires Minecraft Java **1.21.1**, [Fabric Loader](https://fabricmc.net/use/) and [Fabric API](https://modrinth.com/mod/fabric-api). Because it adds blocks (the loot crates), it has to be installed on the server **and** by every player who joins.
 
