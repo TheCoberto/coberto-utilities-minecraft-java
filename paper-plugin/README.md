@@ -2,7 +2,7 @@
 
 Server-side version of Coberto's Utilities for Paper servers. Players don't need any mods, and it works for Bedrock players joining through Geyser.
 
-It has **Classes**, **Activity Rewards**, **Loot Crates**, the **Music Selector** and the **Prank Button**, working like the Fabric mod. Money comes from the server economy through [Vault](https://www.spigotmc.org/resources/vault.34315/) (the same balance as `/bal`), so an economy plugin like EssentialsX is needed for Activity Rewards and song prices.
+It has **Classes**, **Activity Rewards**, **Loot Crates**, the **Music Selector**, the **Prank Button** and **World Cleanup**, working like the Fabric mod. Money comes from the server economy through [Vault](https://www.spigotmc.org/resources/vault.34315/) (the same balance as `/bal`), so an economy plugin like EssentialsX is needed for Activity Rewards and song prices.
 
 Left out because Paper servers already have plugins for them: gamemode shortcuts and AFK detection (EssentialsX), Mob Money (Jobs), creeper anti-grief and Adventure Zones (WorldGuard).
 
@@ -42,8 +42,11 @@ Players use it to pay and queue a song. It plays like a jukebox, heard only near
 ## Prank Button
 Whoever pushes it gets pranked: an anvil shower, a launch into the sky, lightning, a cobweb trap, a killer chicken swarm, fake TNT, a teleport, a scrambled hotbar, spooky darkness, or a random one. The player who placed it (or an operator) sneaks and uses it with an empty hand to change the sign, the prank and its settings in clickable chat, or uses `/prankbutton <x y z> <setting> <value>`.
 
+## World Cleanup
+`/cleanup` clears hostile mobs (zombies, skeletons, creepers, spiders, endermen, slimes, witches, pillagers and more), arrows, XP orbs and dropped items in every world, to cut lag. Everyone sees `[Server] Clearing entities...` and then `[Server] MOBs & dropped items cleared!`. Name-tagged mobs and Citizens NPCs are left alone, and cleared mobs drop nothing. Works from command blocks and the console too, like the World Cleanup mod.
+
 ## Permissions
-`cobertoutilities.admin` (op by default) for `/utilitiesgive`, `/activity*`, `/crates`, `/music`, `/musicskip` and changing any Prank Button. `cobertoutilities.classes.admin` (op by default) for `/class` and `/setclass`.
+`cobertoutilities.admin` (op by default) for `/utilitiesgive`, `/activity*`, `/crates`, `/music`, `/musicskip`, `/cleanup` and changing any Prank Button. `cobertoutilities.classes.admin` (op by default) for `/class` and `/setclass`.
 
 If another plugin uses the same command name, use the `cobertoutilities:` prefix, like `/cobertoutilities:crates`.
 
