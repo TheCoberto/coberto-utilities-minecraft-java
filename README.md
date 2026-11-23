@@ -72,3 +72,5 @@ Requires Minecraft Java **1.21.1**, [Fabric Loader](https://fabricmc.net/use/) a
 ./gradlew build
 ```
 Building needs JDK 25 or newer to run Gradle (the mod itself targets Java 21, which Gradle downloads automatically). The jar ends up in `build/libs/`. Put it in your `.minecraft/mods` folder along with Fabric API. `./gradlew runClient` starts a test game with the mod loaded.
+
+There is also a server-side **Paper plugin** version in [`paper-plugin/`](paper-plugin/README.md) that needs no client mods. So far it has Classes.
