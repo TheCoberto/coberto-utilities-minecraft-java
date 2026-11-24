@@ -69,8 +69,9 @@ public final class WorldCleanup implements CommandExecutor {
 		if (!CLEARED.contains(entity.getType())) return false;
 		// Citizens NPCs can be zombies or skeletons too.
 		if (entity.hasMetadata("NPC")) return false;
-		// Leave name-tagged mobs alone, like someone's pet zombie.
-		return !(entity instanceof Mob mob && mob.customName() != null);
+		// Leave name-tagged mobs alone, like someone's pet zombie. A name tag makes a mob persistent;
+		// a name from a plugin (like Skeleton Variants) doesn't, so those are still cleared.
+		return !(entity instanceof Mob mob && mob.customName() != null && !mob.getRemoveWhenFarAway());
 	}
 
 	private static void broadcast(Component message) {
