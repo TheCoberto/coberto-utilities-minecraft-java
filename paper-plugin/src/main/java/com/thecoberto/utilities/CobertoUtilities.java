@@ -38,6 +38,7 @@ public final class CobertoUtilities extends JavaPlugin implements TabExecutor {
 		new WorldCleanup(this);
 		new Unload(this);
 		new AreaTitles(this);
+		new PlaceRefund(this);
 
 		getCommand("utilitiesgive").setExecutor(this);
 		getCommand("utilitiesgive").setTabCompleter(this);
