@@ -55,7 +55,7 @@ All settings are saved in the world.
 
 World Cleanup, Teams and the Slot Machine, also part of the Bedrock bundle, are separate Java mods: [world-cleanup-minecraft-java](https://github.com/TheCoberto/world-cleanup-minecraft-java), [teams-minecraft-java](https://github.com/TheCoberto/teams-minecraft-java) and [mystical-slots-minecraft-java](https://github.com/TheCoberto/mystical-slots-minecraft-java). Transfer Player isn't needed: Java has a built-in `/transfer` command.
 
-Requires Minecraft Java **1.21.1**, [Fabric Loader](https://fabricmc.net/use/) and [Fabric API](https://modrinth.com/mod/fabric-api). Because it adds blocks (the loot crates), it has to be installed on the server **and** by every player who joins.
+Requires Minecraft Java **26.2**, [Fabric Loader](https://fabricmc.net/use/) and [Fabric API](https://modrinth.com/mod/fabric-api). Because it adds blocks (the loot crates), it has to be installed on the server **and** by every player who joins.
 
 ## Differences from the Bedrock version
 - Commands have no `ev:` prefix: `/creepergriefing` and `/gmc` instead of `/ev:creepergriefing` and `/ev:gmc`.
@@ -71,6 +71,6 @@ Requires Minecraft Java **1.21.1**, [Fabric Loader](https://fabricmc.net/use/) a
 ```
 ./gradlew build
 ```
-Building needs JDK 25 or newer to run Gradle (the mod itself targets Java 21, which Gradle downloads automatically). The jar ends up in `build/libs/`. Put it in your `.minecraft/mods` folder along with Fabric API. `./gradlew runClient` starts a test game with the mod loaded.
+Building needs JDK 25 or newer to run Gradle (the mod targets Java 25 too). The jar ends up in `build/libs/`. Put it in your `.minecraft/mods` folder along with Fabric API. `./gradlew runClient` starts a test game with the mod loaded.
 
 There is also a server-side **Paper plugin** version in [`paper-plugin/`](paper-plugin/README.md) that needs no client mods. It has Classes, Activity Rewards, Loot Crates, the Music Selector, the Prank Button and World Cleanup.

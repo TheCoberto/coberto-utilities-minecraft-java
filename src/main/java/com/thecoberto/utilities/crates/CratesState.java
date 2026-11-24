@@ -5,17 +5,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.Identifier;
-import net.minecraft.world.PersistentState;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 
 /** What each crate drops, saved in the world (data/coberto_crates.dat). */
-public class CratesState extends PersistentState {
-	private static final PersistentState.Type<CratesState> TYPE = new PersistentState.Type<>(CratesState::new, CratesState::fromNbt, null);
+public class CratesState extends SavedData {
+	private static final SavedDataType<CratesState> TYPE = new SavedDataType<>(Identifier.withDefaultNamespace("coberto_crates"), CratesState::new,
+			CompoundTag.CODEC.xmap(CratesState::fromNbt, s -> s.writeNbt(new CompoundTag())), null);
 
 	/** weight = how often an item is picked compared to the others in the crate. */
 	public static final class Entry {
@@ -25,7 +27,7 @@ public class CratesState extends PersistentState {
 		int max;
 
 		Entry(String item, int weight, int min, int max) {
-			this(Identifier.of(item), weight, min, max);
+			this(Identifier.parse(item), weight, min, max);
 		}
 
 		Entry(Identifier item, int weight, int min, int max) {
@@ -100,7 +102,7 @@ public class CratesState extends PersistentState {
 	private final Map<String, Crate> crates = new HashMap<>();
 
 	public static CratesState get(MinecraftServer server) {
-		return server.getOverworld().getPersistentStateManager().getOrCreate(TYPE, "coberto_crates");
+		return server.getDataStorage().computeIfAbsent(TYPE);
 	}
 
 	Crate crate(String key) {
@@ -109,38 +111,37 @@ public class CratesState extends PersistentState {
 
 	void reset(String key) {
 		crates.put(key, defaults(key));
-		markDirty();
+		setDirty();
 	}
 
-	private static CratesState fromNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registries) {
+	private static CratesState fromNbt(CompoundTag nbt) {
 		CratesState state = new CratesState();
-		for (String key : nbt.getKeys()) {
-			NbtCompound c = nbt.getCompound(key);
+		for (String key : nbt.keySet()) {
+			CompoundTag c = nbt.getCompoundOrEmpty(key);
 			Crate crate = new Crate();
-			crate.rollsMin = Math.max(1, c.getInt("rollsMin"));
-			crate.rollsMax = Math.max(crate.rollsMin, c.getInt("rollsMax"));
-			NbtList loot = c.getList("loot", NbtElement.COMPOUND_TYPE);
+			crate.rollsMin = Math.max(1, c.getIntOr("rollsMin", 0));
+			crate.rollsMax = Math.max(crate.rollsMin, c.getIntOr("rollsMax", 0));
+			ListTag loot = c.getListOrEmpty("loot");
 			for (int i = 0; i < loot.size(); i++) {
-				NbtCompound e = loot.getCompound(i);
-				Identifier id = Identifier.tryParse(e.getString("item"));
+				CompoundTag e = loot.getCompoundOrEmpty(i);
+				Identifier id = Identifier.tryParse(e.getStringOr("item", ""));
 				if (id == null) continue;
-				int min = Math.max(1, e.getInt("min"));
-				crate.loot.add(new Entry(id, e.getInt("weight"), min, Math.max(min, e.getInt("max"))));
+				int min = Math.max(1, e.getIntOr("min", 0));
+				crate.loot.add(new Entry(id, e.getIntOr("weight", 0), min, Math.max(min, e.getIntOr("max", 0))));
 			}
 			state.crates.put(key, crate);
 		}
 		return state;
 	}
 
-	@Override
-	public NbtCompound writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registries) {
+		CompoundTag writeNbt(CompoundTag nbt) {
 		crates.forEach((key, crate) -> {
-			NbtCompound c = new NbtCompound();
+			CompoundTag c = new CompoundTag();
 			c.putInt("rollsMin", crate.rollsMin);
 			c.putInt("rollsMax", crate.rollsMax);
-			NbtList loot = new NbtList();
+			ListTag loot = new ListTag();
 			for (Entry entry : crate.loot) {
-				NbtCompound e = new NbtCompound();
+				CompoundTag e = new CompoundTag();
 				e.putString("item", entry.item.toString());
 				e.putInt("weight", entry.weight);
 				e.putInt("min", entry.min);

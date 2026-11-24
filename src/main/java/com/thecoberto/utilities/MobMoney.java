@@ -14,26 +14,28 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
-import net.minecraft.command.CommandRegistryAccess;
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.argument.RegistryEntryReferenceArgumentType;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.commands.CommandBuildContext;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.commands.arguments.ResourceArgument;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.random.Random;
-import net.minecraft.world.PersistentState;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.util.RandomSource;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 
 /**
  * Mob Money: players earn Money for killing mobs. Off by default. Operators
@@ -75,8 +77,9 @@ public final class MobMoney {
 		}
 	}
 
-	public static class State extends PersistentState {
-		private static final PersistentState.Type<State> TYPE = new PersistentState.Type<>(State::new, State::fromNbt, null);
+	public static class State extends SavedData {
+		private static final SavedDataType<State> TYPE = new SavedDataType<>(Identifier.withDefaultNamespace("coberto_mob_money"), State::new,
+			CompoundTag.CODEC.xmap(State::fromNbt, s -> s.writeNbt(new CompoundTag())), null);
 
 		boolean enabled = false;
 		int min = 5;
@@ -86,41 +89,40 @@ public final class MobMoney {
 		Map<String, Entry> mobs = hostilePreset();
 
 		static State get(MinecraftServer server) {
-			return server.getOverworld().getPersistentStateManager().getOrCreate(TYPE, "coberto_mob_money");
+			return server.getDataStorage().computeIfAbsent(TYPE);
 		}
 
-		private static State fromNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registries) {
+		private static State fromNbt(CompoundTag nbt) {
 			State s = new State();
-			s.enabled = nbt.getBoolean("enabled");
-			s.min = nbt.getInt("min");
-			s.max = nbt.getInt("max");
-			s.notify = nbt.getString("notify");
+			s.enabled = nbt.getBooleanOr("enabled", false);
+			s.min = nbt.getIntOr("min", 0);
+			s.max = nbt.getIntOr("max", 0);
+			s.notify = nbt.getStringOr("notify", "");
 			if (!NOTIFY_MODES.contains(s.notify)) s.notify = "actionbar";
-			s.allMobs = nbt.getBoolean("allMobs");
+			s.allMobs = nbt.getBooleanOr("allMobs", false);
 			s.mobs = new LinkedHashMap<>();
-			NbtCompound mobs = nbt.getCompound("mobs");
-			for (String id : mobs.getKeys()) {
-				if (mobs.contains(id, NbtElement.COMPOUND_TYPE)) {
-					NbtCompound range = mobs.getCompound(id);
-					s.mobs.put(id, Entry.range(range.getInt("min"), range.getInt("max")));
+			CompoundTag mobs = nbt.getCompoundOrEmpty("mobs");
+			for (String id : mobs.keySet()) {
+				if (mobs.getCompound(id).isPresent()) {
+					CompoundTag range = mobs.getCompoundOrEmpty(id);
+					s.mobs.put(id, Entry.range(range.getIntOr("min", 0), range.getIntOr("max", 0)));
 				} else {
-					s.mobs.put(id, mobs.getBoolean(id) ? Entry.DEFAULT : Entry.EXCLUDED);
+					s.mobs.put(id, mobs.getBooleanOr(id, false) ? Entry.DEFAULT : Entry.EXCLUDED);
 				}
 			}
 			return s;
 		}
 
-		@Override
-		public NbtCompound writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registries) {
+				CompoundTag writeNbt(CompoundTag nbt) {
 			nbt.putBoolean("enabled", enabled);
 			nbt.putInt("min", min);
 			nbt.putInt("max", max);
 			nbt.putString("notify", notify);
 			nbt.putBoolean("allMobs", allMobs);
-			NbtCompound mobsNbt = new NbtCompound();
+			CompoundTag mobsNbt = new CompoundTag();
 			mobs.forEach((id, entry) -> {
 				if (entry.ownRange()) {
-					NbtCompound range = new NbtCompound();
+					CompoundTag range = new CompoundTag();
 					range.putInt("min", entry.min());
 					range.putInt("max", entry.max());
 					mobsNbt.put(id, range);
@@ -149,11 +151,11 @@ public final class MobMoney {
 		return mobs;
 	}
 
-	private static void change(ServerCommandSource source, java.util.function.Consumer<State> change, Text announcement) {
+	private static void change(CommandSourceStack source, java.util.function.Consumer<State> change, Component announcement) {
 		State state = State.get(source.getServer());
 		change.accept(state);
-		state.markDirty();
-		source.getServer().getPlayerManager().broadcast(prefix().append(announcement), false);
+		state.setDirty();
+		source.getServer().getPlayerList().broadcastSystemMessage(prefix().append(announcement), false);
 	}
 
 	// ---------- Paying out ----------
@@ -164,91 +166,91 @@ public final class MobMoney {
 
 	private static void onDeath(LivingEntity dead, DamageSource source) {
 		// Arrows, tridents etc. report the player who fired them as the attacker.
-		if (!(source.getAttacker() instanceof ServerPlayerEntity killer)) return;
-		State settings = State.get(killer.server);
+		if (!(source.getEntity() instanceof ServerPlayer killer)) return;
+		State settings = State.get(killer.level().getServer());
 		if (!settings.enabled) return;
 
-		String id = Registries.ENTITY_TYPE.getId(dead.getType()).toString();
+		String id = BuiltInRegistries.ENTITY_TYPE.getKey(dead.getType()).toString();
 		int[] range = settings.rewardRange(id);
 		if (range == null) return;
 
-		Random random = killer.getRandom();
+		RandomSource random = killer.getRandom();
 		int amount = range[0] + random.nextInt(range[1] - range[0] + 1);
 		if (amount <= 0) return;
 		Money.add(killer, amount);
 
 		String notify = settings.notify;
 		if (notify.equals("chat") || notify.equals("both")) {
-			killer.sendMessage(Text.literal("You got ")
-					.append(Text.literal(Money.format(amount) + " Money").formatted(Formatting.GREEN))
+			killer.sendSystemMessage(Component.literal("You got ")
+					.append(Component.literal(Money.format(amount) + " Money").withStyle(ChatFormatting.GREEN))
 					.append(". ")
-					.append(Text.literal("(").append(dead.getType().getName()).append(")").formatted(Formatting.GRAY)));
+					.append(Component.literal("(").append(dead.getType().getDescription()).append(")").withStyle(ChatFormatting.GRAY)));
 		}
 		if (notify.equals("actionbar") || notify.equals("both")) {
-			killer.sendMessage(Text.literal("+" + Money.format(amount) + " Money").formatted(Formatting.GREEN), true);
+			killer.sendOverlayMessage(Component.literal("+" + Money.format(amount) + " Money").withStyle(ChatFormatting.GREEN));
 		}
 	}
 
 	// ---------- Commands ----------
 
-	static void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registryAccess) {
-		dispatcher.register(CommandManager.literal("mobmoney")
-				.requires(s -> s.hasPermissionLevel(2))
+	static void register(CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext registryAccess) {
+		dispatcher.register(Commands.literal("mobmoney")
+				.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
 				.executes(c -> {
-					Text text = describe(State.get(c.getSource().getServer()));
-					c.getSource().sendFeedback(() -> text, false);
+					Component text = describe(State.get(c.getSource().getServer()));
+					c.getSource().sendSuccess(() -> text, false);
 					return 1;
 				})
-				.then(CommandManager.argument("enabled", BoolArgumentType.bool()).executes(c -> {
+				.then(Commands.argument("enabled", BoolArgumentType.bool()).executes(c -> {
 					boolean enabled = BoolArgumentType.getBool(c, "enabled");
 					change(c.getSource(), s -> s.enabled = enabled, enabled
-							? Text.empty().append(Text.literal("On").formatted(Formatting.GREEN)).append(". Players now earn Money for killing mobs.")
-							: Text.empty().append(Text.literal("Off").formatted(Formatting.RED)).append("."));
+							? Component.empty().append(Component.literal("On").withStyle(ChatFormatting.GREEN)).append(". Players now earn Money for killing mobs.")
+							: Component.empty().append(Component.literal("Off").withStyle(ChatFormatting.RED)).append("."));
 					return 1;
 				})));
 
-		dispatcher.register(CommandManager.literal("mobmoneyrange")
-				.requires(s -> s.hasPermissionLevel(2))
-				.then(CommandManager.argument("min", IntegerArgumentType.integer(0, Money.MAX_AMOUNT))
-						.then(CommandManager.argument("max", IntegerArgumentType.integer(0, Money.MAX_AMOUNT)).executes(c -> {
+		dispatcher.register(Commands.literal("mobmoneyrange")
+				.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+				.then(Commands.argument("min", IntegerArgumentType.integer(0, Money.MAX_AMOUNT))
+						.then(Commands.argument("max", IntegerArgumentType.integer(0, Money.MAX_AMOUNT)).executes(c -> {
 							int min = IntegerArgumentType.getInteger(c, "min");
 							int max = IntegerArgumentType.getInteger(c, "max");
 							if (min > max) return fail(c.getSource(), "min can't be more than max.");
 							change(c.getSource(), s -> { s.min = min; s.max = max; },
-									Text.literal("Mob kills now pay ").append(rangeText(min, max)).append("."));
+									Component.literal("Mob kills now pay ").append(rangeText(min, max)).append("."));
 							return 1;
 						}))));
 
-		dispatcher.register(CommandManager.literal("mobmoneyadd")
-				.requires(s -> s.hasPermissionLevel(2))
-				.then(CommandManager.argument("mob", RegistryEntryReferenceArgumentType.registryEntry(registryAccess, RegistryKeys.ENTITY_TYPE))
+		dispatcher.register(Commands.literal("mobmoneyadd")
+				.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+				.then(Commands.argument("mob", ResourceArgument.resource(registryAccess, Registries.ENTITY_TYPE))
 						.executes(c -> add(c, null, null))
-						.then(CommandManager.argument("min", IntegerArgumentType.integer(0, Money.MAX_AMOUNT))
+						.then(Commands.argument("min", IntegerArgumentType.integer(0, Money.MAX_AMOUNT))
 								.executes(c -> {
 									int amount = IntegerArgumentType.getInteger(c, "min"); // one number = a fixed amount
 									return add(c, amount, amount);
 								})
-								.then(CommandManager.argument("max", IntegerArgumentType.integer(0, Money.MAX_AMOUNT))
+								.then(Commands.argument("max", IntegerArgumentType.integer(0, Money.MAX_AMOUNT))
 										.executes(c -> add(c, IntegerArgumentType.getInteger(c, "min"), IntegerArgumentType.getInteger(c, "max")))))));
 
-		dispatcher.register(CommandManager.literal("mobmoneyremove")
-				.requires(s -> s.hasPermissionLevel(2))
-				.then(CommandManager.argument("mob", RegistryEntryReferenceArgumentType.registryEntry(registryAccess, RegistryKeys.ENTITY_TYPE))
+		dispatcher.register(Commands.literal("mobmoneyremove")
+				.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+				.then(Commands.argument("mob", ResourceArgument.resource(registryAccess, Registries.ENTITY_TYPE))
 						.executes(c -> {
 							EntityType<?> type = mobArgument(c);
-							String id = Registries.ENTITY_TYPE.getId(type).toString();
+							String id = BuiltInRegistries.ENTITY_TYPE.getKey(type).toString();
 							change(c.getSource(), s -> {
 								// With "all mobs" on, remember the mob as excluded.
 								if (s.allMobs) s.mobs.put(id, Entry.EXCLUDED);
 								else s.mobs.remove(id);
-							}, Text.empty().append(type.getName()).append(" no longer pays Money."));
+							}, Component.empty().append(type.getDescription()).append(" no longer pays Money."));
 							return 1;
 						})));
 
-		dispatcher.register(CommandManager.literal("mobmoneypreset")
-				.requires(s -> s.hasPermissionLevel(2))
-				.then(CommandManager.argument("preset", com.mojang.brigadier.arguments.StringArgumentType.word())
-						.suggests((c, b) -> CommandSource.suggestMatching(PRESETS, b))
+		dispatcher.register(Commands.literal("mobmoneypreset")
+				.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+				.then(Commands.argument("preset", com.mojang.brigadier.arguments.StringArgumentType.word())
+						.suggests((c, b) -> SharedSuggestionProvider.suggest(PRESETS, b))
 						.executes(c -> {
 							String preset = com.mojang.brigadier.arguments.StringArgumentType.getString(c, "preset").toLowerCase(Locale.ROOT);
 							if (!PRESETS.contains(preset)) return fail(c.getSource(), "Choose hostile, all or none.");
@@ -260,40 +262,40 @@ public final class MobMoney {
 							change(c.getSource(), s -> {
 								s.allMobs = preset.equals("all");
 								s.mobs = preset.equals("hostile") ? hostilePreset() : new LinkedHashMap<>();
-							}, Text.literal(announcement));
+							}, Component.literal(announcement));
 							return 1;
 						})));
 
-		dispatcher.register(CommandManager.literal("mobmoneynotify")
-				.requires(s -> s.hasPermissionLevel(2))
-				.then(CommandManager.argument("mode", com.mojang.brigadier.arguments.StringArgumentType.word())
-						.suggests((c, b) -> CommandSource.suggestMatching(NOTIFY_MODES, b))
+		dispatcher.register(Commands.literal("mobmoneynotify")
+				.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+				.then(Commands.argument("mode", com.mojang.brigadier.arguments.StringArgumentType.word())
+						.suggests((c, b) -> SharedSuggestionProvider.suggest(NOTIFY_MODES, b))
 						.executes(c -> {
 							String mode = com.mojang.brigadier.arguments.StringArgumentType.getString(c, "mode").toLowerCase(Locale.ROOT);
 							if (!NOTIFY_MODES.contains(mode)) return fail(c.getSource(), "Choose chat, actionbar, both or none.");
-							change(c.getSource(), s -> s.notify = mode, Text.literal("Kill rewards now show " + notifyText(mode) + "."));
+							change(c.getSource(), s -> s.notify = mode, Component.literal("Kill rewards now show " + notifyText(mode) + "."));
 							return 1;
 						})));
 	}
 
-	private static EntityType<?> mobArgument(CommandContext<ServerCommandSource> c) throws CommandSyntaxException {
-		return RegistryEntryReferenceArgumentType.getRegistryEntry(c, "mob", RegistryKeys.ENTITY_TYPE).value();
+	private static EntityType<?> mobArgument(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+		return ResourceArgument.getResource(c, "mob", Registries.ENTITY_TYPE).value();
 	}
 
-	private static int add(CommandContext<ServerCommandSource> c, Integer min, Integer max) throws CommandSyntaxException {
+	private static int add(CommandContext<CommandSourceStack> c, Integer min, Integer max) throws CommandSyntaxException {
 		EntityType<?> type = mobArgument(c);
-		String id = Registries.ENTITY_TYPE.getId(type).toString();
-		if (NEVER_PAY.contains(id)) return fail(c.getSource(), type.getName().getString() + " can't pay Money.");
+		String id = BuiltInRegistries.ENTITY_TYPE.getKey(type).toString();
+		if (NEVER_PAY.contains(id)) return fail(c.getSource(), type.getDescription().getString() + " can't pay Money.");
 		if (min != null && min > max) return fail(c.getSource(), "min can't be more than max.");
 		change(c.getSource(), s -> s.mobs.put(id, min == null ? Entry.DEFAULT : Entry.range(min, max)),
-				Text.empty().append(type.getName()).append(" now pays ")
-						.append(min == null ? Text.literal("the default range") : rangeText(min, max)).append("."));
+				Component.empty().append(type.getDescription()).append(" now pays ")
+						.append(min == null ? Component.literal("the default range") : rangeText(min, max)).append("."));
 		return 1;
 	}
 
 	// ---------- Text ----------
 
-	private static Text describe(State s) {
+	private static Component describe(State s) {
 		List<String> plain = new ArrayList<>();
 		List<String> custom = new ArrayList<>();
 		List<String> excluded = new ArrayList<>();
@@ -304,24 +306,24 @@ public final class MobMoney {
 			else plain.add(name);
 		});
 
-		MutableText text = Text.empty()
-				.append(Text.literal("Mob Money").formatted(Formatting.GOLD)).append(" is ")
-				.append(s.enabled ? Text.literal("on").formatted(Formatting.GREEN) : Text.literal("off").formatted(Formatting.RED))
+		MutableComponent text = Component.empty()
+				.append(Component.literal("Mob Money").withStyle(ChatFormatting.GOLD)).append(" is ")
+				.append(s.enabled ? Component.literal("on").withStyle(ChatFormatting.GREEN) : Component.literal("off").withStyle(ChatFormatting.RED))
 				.append(".\nDefault reward: ").append(rangeText(s.min, s.max))
 				.append(". Shown " + notifyText(s.notify) + ".\nPaying mobs: ");
 		if (s.allMobs) {
-			text.append(Text.literal("all").formatted(Formatting.YELLOW))
+			text.append(Component.literal("all").withStyle(ChatFormatting.YELLOW))
 					.append(excluded.isEmpty() ? "" : ", except " + String.join(", ", excluded));
 		} else {
-			text.append(plain.isEmpty() ? Text.literal("none").formatted(Formatting.RED) : Text.literal(String.join(", ", plain)));
+			text.append(plain.isEmpty() ? Component.literal("none").withStyle(ChatFormatting.RED) : Component.literal(String.join(", ", plain)));
 		}
 		if (!custom.isEmpty()) text.append("\nOwn ranges: " + String.join(", ", custom));
 		return text;
 	}
 
-	private static MutableText rangeText(int min, int max) {
+	private static MutableComponent rangeText(int min, int max) {
 		String amount = min == max ? Money.format(min) : Money.format(min) + "-" + Money.format(max);
-		return Text.empty().append(Text.literal(amount).formatted(Formatting.GREEN)).append(" Money");
+		return Component.empty().append(Component.literal(amount).withStyle(ChatFormatting.GREEN)).append(" Money");
 	}
 
 	private static String notifyText(String mode) {
@@ -333,12 +335,12 @@ public final class MobMoney {
 		};
 	}
 
-	private static MutableText prefix() {
-		return Text.empty().append(Text.literal("Mob Money:").formatted(Formatting.GOLD)).append(" ");
+	private static MutableComponent prefix() {
+		return Component.empty().append(Component.literal("Mob Money:").withStyle(ChatFormatting.GOLD)).append(" ");
 	}
 
-	private static int fail(ServerCommandSource source, String message) {
-		source.sendError(Text.literal(message));
+	private static int fail(CommandSourceStack source, String message) {
+		source.sendFailure(Component.literal(message));
 		return 0;
 	}
 }

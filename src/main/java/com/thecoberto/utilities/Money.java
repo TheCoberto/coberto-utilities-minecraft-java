@@ -3,11 +3,11 @@ package com.thecoberto.utilities;
 import java.text.NumberFormat;
 import java.util.Locale;
 
-import net.minecraft.scoreboard.ScoreboardCriterion;
-import net.minecraft.scoreboard.ScoreboardObjective;
-import net.minecraft.scoreboard.ServerScoreboard;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.world.scores.criteria.ObjectiveCriteria;
+import net.minecraft.world.scores.Objective;
+import net.minecraft.server.ServerScoreboard;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
 
 /**
  * The Money scoreboard: shared by Mob Money, Activity Rewards and the Slot
@@ -20,22 +20,22 @@ public final class Money {
 
 	private Money() {}
 
-	public static void add(ServerPlayerEntity player, int amount) {
-		ServerScoreboard scoreboard = player.server.getScoreboard();
-		ScoreboardObjective objective = scoreboard.getNullableObjective(OBJECTIVE);
+	public static void add(ServerPlayer player, int amount) {
+		ServerScoreboard scoreboard = player.level().getServer().getScoreboard();
+		Objective objective = scoreboard.getObjective(OBJECTIVE);
 		if (objective == null) {
-			objective = scoreboard.addObjective(OBJECTIVE, ScoreboardCriterion.DUMMY, Text.literal(OBJECTIVE),
-					ScoreboardCriterion.RenderType.INTEGER, true, null);
+			objective = scoreboard.addObjective(OBJECTIVE, ObjectiveCriteria.DUMMY, Component.literal(OBJECTIVE),
+					ObjectiveCriteria.RenderType.INTEGER, true, null);
 		}
-		scoreboard.getOrCreateScore(player, objective).incrementScore(amount);
+		scoreboard.getOrCreatePlayerScore(player, objective).add(amount);
 	}
 
-	public static int get(ServerPlayerEntity player) {
-		ServerScoreboard scoreboard = player.server.getScoreboard();
-		ScoreboardObjective objective = scoreboard.getNullableObjective(OBJECTIVE);
+	public static int get(ServerPlayer player) {
+		ServerScoreboard scoreboard = player.level().getServer().getScoreboard();
+		Objective objective = scoreboard.getObjective(OBJECTIVE);
 		if (objective == null) return 0;
-		var score = scoreboard.getScore(player, objective);
-		return score == null ? 0 : score.getScore();
+		var score = scoreboard.getPlayerScoreInfo(player, objective);
+		return score == null ? 0 : score.value();
 	}
 
 	public static String format(long n) {

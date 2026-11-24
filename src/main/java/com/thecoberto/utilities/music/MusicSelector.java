@@ -1,5 +1,9 @@
 package com.thecoberto.utilities.music;
 
+import com.thecoberto.utilities.CobertoUtilities;
+
+import com.thecoberto.utilities.Sounds;
+
 import java.util.Comparator;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -13,30 +17,32 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.thecoberto.utilities.Money;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
-import net.minecraft.block.AbstractBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.MapColor;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.command.CommandSource;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroups;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.BlockSoundGroup;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Vec3d;
+import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.material.MapColor;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.Registry;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * Music Selector: players use the block to pay Money and queue a song at that
@@ -48,23 +54,24 @@ import net.minecraft.util.math.Vec3d;
 public final class MusicSelector {
 	private MusicSelector() {}
 
-	public static final Block BLOCK = new MusicSelectorBlock(AbstractBlock.Settings.create()
-			.mapColor(MapColor.DIRT_BROWN)
+	public static final Block BLOCK = new MusicSelectorBlock(BlockBehaviour.Properties.of()
+			.setId(ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath("coberto", "music_selector")))
+			.mapColor(MapColor.DIRT)
 			.strength(2.0f, 3_600_000.0f) // explosions can't break it
-			.sounds(BlockSoundGroup.WOOD)
-			.luminance(state -> 4));
+			.sound(SoundType.WOOD)
+			.lightLevel(state -> 4));
 	public static BlockEntityType<MusicSelectorBlockEntity> BLOCK_ENTITY;
 
 	/** Selectors loaded right now, for /musicskip and the settings that affect every selector. */
 	static final java.util.Set<MusicSelectorBlockEntity> LOADED = java.util.Collections.newSetFromMap(new java.util.WeakHashMap<>());
 
 	public static void registerBlocks() {
-		Identifier id = Identifier.of("coberto", "music_selector");
-		Registry.register(Registries.BLOCK, id, BLOCK);
-		Item item = Registry.register(Registries.ITEM, id, new BlockItem(BLOCK, new Item.Settings()));
-		BLOCK_ENTITY = Registry.register(Registries.BLOCK_ENTITY_TYPE, id,
-				BlockEntityType.Builder.create(MusicSelectorBlockEntity::new, BLOCK).build(null));
-		ItemGroupEvents.modifyEntriesEvent(ItemGroups.FUNCTIONAL).register(entries -> entries.add(item));
+		Identifier id = Identifier.fromNamespaceAndPath("coberto", "music_selector");
+		Registry.register(BuiltInRegistries.BLOCK, id, BLOCK);
+		Item item = Registry.register(BuiltInRegistries.ITEM, id, new BlockItem(BLOCK, new Item.Properties().setId(ResourceKey.create(Registries.ITEM, id)).useBlockDescriptionPrefix()));
+		BLOCK_ENTITY = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, id,
+				new BlockEntityType<>(MusicSelectorBlockEntity::new, java.util.Set.of(BLOCK)));
+		CreativeModeTabEvents.modifyOutputEvent(CobertoUtilities.FUNCTIONAL_BLOCKS).register(output -> output.accept(item));
 	}
 
 	public static void registerEvents() {
@@ -76,13 +83,13 @@ public final class MusicSelector {
 
 	// ---------- Queueing ----------
 
-	static int cooldownLeft(ServerPlayerEntity player) {
-		Long until = MusicState.get(player.server).cooldowns.get(player.getUuid());
+	static int cooldownLeft(ServerPlayer player) {
+		Long until = MusicState.get(player.level().getServer()).cooldowns.get(player.getUUID());
 		return until == null ? 0 : (int) Math.max(0, Math.ceil((until - System.currentTimeMillis()) / 1000.0));
 	}
 
-	static void queueSong(ServerPlayerEntity player, MusicSelectorBlockEntity station, Track track) {
-		MusicState s = MusicState.get(player.server);
+	static void queueSong(ServerPlayer player, MusicSelectorBlockEntity station, Track track) {
+		MusicState s = MusicState.get(player.level().getServer());
 		if (!s.allowed.contains(track.id())) {
 			error(player, track.name() + " can't be queued.");
 			return;
@@ -110,8 +117,8 @@ public final class MusicSelector {
 		}
 
 		if (price > 0) Money.add(player, -price);
-		s.cooldowns.put(player.getUuid(), System.currentTimeMillis() + s.cooldown * 1000L);
-		s.markDirty();
+		s.cooldowns.put(player.getUUID(), System.currentTimeMillis() + s.cooldown * 1000L);
+		s.setDirty();
 
 		// A song someone paid for interrupts the autoplay loop.
 		boolean startNow = station.current == null || station.current.by() == null;
@@ -120,33 +127,33 @@ public final class MusicSelector {
 			station.playNext();
 		} else {
 			station.tellNearby(prefix().append(player.getName().getString() + " queued ")
-					.append(Text.literal(track.name()).formatted(Formatting.AQUA))
+					.append(Component.literal(track.name()).withStyle(ChatFormatting.AQUA))
 					.append(" (#" + station.queue.size() + " in line)."));
 			station.updateLabel();
 		}
-		player.playSoundToPlayer(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 1.0f, 1.0f);
+		Sounds.play(player, SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 1.0f, 1.0f);
 	}
 
-	private static void error(ServerPlayerEntity player, String message) {
-		player.sendMessage(prefix().append(Text.literal(message).formatted(Formatting.RED)));
+	private static void error(ServerPlayer player, String message) {
+		player.sendSystemMessage(prefix().append(Component.literal(message).withStyle(ChatFormatting.RED)));
 	}
 
 	// ---------- Commands ----------
 
-	private static final SuggestionProvider<ServerCommandSource> SONGS = (c, b) ->
-			CommandSource.suggestMatching(Track.all(c.getSource().getServer()).keySet(), b);
+	private static final SuggestionProvider<CommandSourceStack> SONGS = (c, b) ->
+			SharedSuggestionProvider.suggest(Track.all(c.getSource().getServer()).keySet(), b);
 
-	public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
-		dispatcher.register(CommandManager.literal("music")
-				.requires(s -> s.hasPermissionLevel(2))
+	public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+		dispatcher.register(Commands.literal("music")
+				.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
 				.executes(c -> showSettings(c.getSource()))
-				.then(CommandManager.literal("price").then(CommandManager.argument("money", IntegerArgumentType.integer(0, Money.MAX_AMOUNT))
+				.then(Commands.literal("price").then(Commands.argument("money", IntegerArgumentType.integer(0, Money.MAX_AMOUNT))
 						.executes(c -> change(c, s -> s.price = IntegerArgumentType.getInteger(c, "money"), true))))
-				.then(CommandManager.literal("cooldown").then(CommandManager.argument("seconds", IntegerArgumentType.integer(0, 86400))
+				.then(Commands.literal("cooldown").then(Commands.argument("seconds", IntegerArgumentType.integer(0, 86400))
 						.executes(c -> change(c, s -> s.cooldown = IntegerArgumentType.getInteger(c, "seconds"), true))))
-				.then(CommandManager.literal("maxqueue").then(CommandManager.argument("songs", IntegerArgumentType.integer(1, 20))
+				.then(Commands.literal("maxqueue").then(Commands.argument("songs", IntegerArgumentType.integer(1, 20))
 						.executes(c -> change(c, s -> s.maxQueue = IntegerArgumentType.getInteger(c, "songs"), true))))
-				.then(CommandManager.literal("autoplay").then(CommandManager.argument("on", BoolArgumentType.bool())
+				.then(Commands.literal("autoplay").then(Commands.argument("on", BoolArgumentType.bool())
 						.executes(c -> {
 							boolean on = BoolArgumentType.getBool(c, "on");
 							change(c, s -> s.autoplay = on, true);
@@ -159,36 +166,36 @@ public final class MusicSelector {
 							}
 							return 1;
 						})))
-				.then(CommandManager.literal("shuffle").then(CommandManager.argument("on", BoolArgumentType.bool())
+				.then(Commands.literal("shuffle").then(Commands.argument("on", BoolArgumentType.bool())
 						.executes(c -> change(c, s -> s.shuffle = BoolArgumentType.getBool(c, "on"), true))))
-				.then(CommandManager.literal("songs").executes(c -> showSongs(c.getSource())))
-				.then(CommandManager.literal("allow").then(CommandManager.argument("song", StringArgumentType.string()).suggests(SONGS)
-						.then(CommandManager.argument("on", BoolArgumentType.bool())
+				.then(Commands.literal("songs").executes(c -> showSongs(c.getSource())))
+				.then(Commands.literal("allow").then(Commands.argument("song", StringArgumentType.string()).suggests(SONGS)
+						.then(Commands.argument("on", BoolArgumentType.bool())
 								.executes(c -> changeSong(c, (s, id) -> toggle(s.allowed, id, BoolArgumentType.getBool(c, "on")))))))
-				.then(CommandManager.literal("playlist").then(CommandManager.argument("song", StringArgumentType.string()).suggests(SONGS)
-						.then(CommandManager.argument("on", BoolArgumentType.bool())
+				.then(Commands.literal("playlist").then(Commands.argument("song", StringArgumentType.string()).suggests(SONGS)
+						.then(Commands.argument("on", BoolArgumentType.bool())
 								.executes(c -> changeSong(c, (s, id) -> toggle(s.playlist, id, BoolArgumentType.getBool(c, "on")))))))
-				.then(CommandManager.literal("songprice").then(CommandManager.argument("song", StringArgumentType.string()).suggests(SONGS)
-						.then(CommandManager.literal("default").executes(c -> changeSong(c, (s, id) -> s.prices.remove(id))))
-						.then(CommandManager.argument("money", IntegerArgumentType.integer(0, Money.MAX_AMOUNT))
+				.then(Commands.literal("songprice").then(Commands.argument("song", StringArgumentType.string()).suggests(SONGS)
+						.then(Commands.literal("default").executes(c -> changeSong(c, (s, id) -> s.prices.remove(id))))
+						.then(Commands.argument("money", IntegerArgumentType.integer(0, Money.MAX_AMOUNT))
 								.executes(c -> changeSong(c, (s, id) -> s.prices.put(id, IntegerArgumentType.getInteger(c, "money")))))))
-				.then(CommandManager.literal("stopall").executes(c -> {
+				.then(Commands.literal("stopall").executes(c -> {
 					for (var station : LOADED) station.clear();
-					c.getSource().sendFeedback(() -> prefix().append("Stopped every loaded selector."), true);
+					c.getSource().sendSuccess(() -> prefix().append("Stopped every loaded selector."), true);
 					return 1;
 				})));
 
-		dispatcher.register(CommandManager.literal("musicskip")
-				.requires(s -> s.hasPermissionLevel(2))
+		dispatcher.register(Commands.literal("musicskip")
+				.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
 				.executes(c -> {
-					ServerCommandSource source = c.getSource();
-					Vec3d from = source.getPosition();
+					CommandSourceStack source = c.getSource();
+					Vec3 from = source.getPosition();
 					var nearest = LOADED.stream()
-							.filter(st -> !st.isRemoved() && st.getWorld() == source.getWorld() && st.current != null)
-							.filter(st -> st.getPos().toCenterPos().squaredDistanceTo(from) <= 64 * 64)
-							.min(Comparator.comparingDouble(st -> st.getPos().toCenterPos().squaredDistanceTo(from)));
+							.filter(st -> !st.isRemoved() && st.getLevel() == source.getLevel() && st.current != null)
+							.filter(st -> Vec3.atCenterOf(st.getBlockPos()).distanceToSqr(from) <= 64 * 64)
+							.min(Comparator.comparingDouble(st -> Vec3.atCenterOf(st.getBlockPos()).distanceToSqr(from)));
 					if (nearest.isEmpty()) {
-						source.sendError(Text.literal("No Music Selector within 64 blocks is playing a song."));
+						source.sendFailure(Component.literal("No Music Selector within 64 blocks is playing a song."));
 						return 0;
 					}
 					nearest.get().skip();
@@ -201,32 +208,32 @@ public final class MusicSelector {
 		if (on) list.add(id);
 	}
 
-	private static int change(CommandContext<ServerCommandSource> c, Consumer<MusicState> change, boolean show) {
+	private static int change(CommandContext<CommandSourceStack> c, Consumer<MusicState> change, boolean show) {
 		MusicState s = MusicState.get(c.getSource().getServer());
 		change.accept(s);
-		s.markDirty();
+		s.setDirty();
 		if (show) showSettings(c.getSource());
 		return 1;
 	}
 
-	private static int changeSong(CommandContext<ServerCommandSource> c, java.util.function.BiConsumer<MusicState, String> change) {
+	private static int changeSong(CommandContext<CommandSourceStack> c, java.util.function.BiConsumer<MusicState, String> change) {
 		String id = StringArgumentType.getString(c, "song");
 		if (!Track.all(c.getSource().getServer()).containsKey(id)) {
-			c.getSource().sendError(Text.literal("No song called " + id + ". Use /music songs to see them."));
+			c.getSource().sendFailure(Component.literal("No song called " + id + ". Use /music songs to see them."));
 			return 0;
 		}
 		MusicState s = MusicState.get(c.getSource().getServer());
 		change.accept(s, id);
-		s.markDirty();
+		s.setDirty();
 		return showSongs(c.getSource());
 	}
 
-	static int showSettings(ServerCommandSource source) {
+	static int showSettings(CommandSourceStack source) {
 		MusicState s = MusicState.get(source.getServer());
 		int total = Track.all(source.getServer()).size();
-		MutableText text = Text.empty().append(Text.literal("Music Settings").formatted(Formatting.GOLD))
+		MutableComponent text = Component.empty().append(Component.literal("Music Settings").withStyle(ChatFormatting.GOLD))
 				.append(" (every Music Selector; each keeps its own queue)")
-				.append("\n Price: ").append(Text.literal(Money.format(s.price) + " Money").formatted(Formatting.GREEN)).append(" per song ")
+				.append("\n Price: ").append(Component.literal(Money.format(s.price) + " Money").withStyle(ChatFormatting.GREEN)).append(" per song ")
 				.append(button("[Change]", "/music price " + s.price, false))
 				.append("\n Cooldown: " + formatTime(s.cooldown) + " between a player's songs ")
 				.append(button("[Change]", "/music cooldown " + s.cooldown, false))
@@ -235,20 +242,20 @@ public final class MusicSelector {
 				.append("\n Songs players can queue: " + s.allowed.size() + "/" + total + " ")
 				.append(button("[Songs and prices]", "/music songs", true))
 				.append("\n Autoplay: ")
-				.append(s.autoplay ? Text.literal("on").formatted(Formatting.GREEN) : Text.literal("off").formatted(Formatting.RED))
+				.append(s.autoplay ? Component.literal("on").withStyle(ChatFormatting.GREEN) : Component.literal("off").withStyle(ChatFormatting.RED))
 				.append(s.autoplay ? " (" + s.playlist.size() + " songs" + (s.shuffle ? ", shuffled" : "") + ")" : "")
 				.append(" ").append(button(s.autoplay ? "[Turn off]" : "[Turn on]", "/music autoplay " + !s.autoplay, true))
 				.append(" ").append(button(s.shuffle ? "[Shuffle: on]" : "[Shuffle: off]", "/music shuffle " + !s.shuffle, true))
-				.append("\n ").append(button("[Stop every selector]", "/music stopall", true).formatted(Formatting.RED));
-		source.sendFeedback(() -> text, false);
+				.append("\n ").append(button("[Stop every selector]", "/music stopall", true).withStyle(ChatFormatting.RED));
+		source.sendSuccess(() -> text, false);
 		return 1;
 	}
 
-	private static int showSongs(ServerCommandSource source) {
+	private static int showSongs(CommandSourceStack source) {
 		MusicState s = MusicState.get(source.getServer());
-		MutableText text = Text.empty().append(Text.literal("Songs").formatted(Formatting.GOLD))
-				.append(": click to change. ").append(Text.literal("Queue").formatted(Formatting.AQUA))
-				.append(" = players can queue it, ").append(Text.literal("Auto").formatted(Formatting.AQUA))
+		MutableComponent text = Component.empty().append(Component.literal("Songs").withStyle(ChatFormatting.GOLD))
+				.append(": click to change. ").append(Component.literal("Queue").withStyle(ChatFormatting.AQUA))
+				.append(" = players can queue it, ").append(Component.literal("Auto").withStyle(ChatFormatting.AQUA))
 				.append(" = in the autoplay loop. ").append(button("[Back]", "/music", true));
 		for (Map.Entry<String, Track> e : Track.all(source.getServer()).entrySet()) {
 			String id = e.getKey();
@@ -259,33 +266,33 @@ public final class MusicSelector {
 			text.append("\n ")
 					.append(toggleButton("Queue", allowed, "/music allow " + arg + " " + !allowed))
 					.append(" ").append(toggleButton("Auto", inPlaylist, "/music playlist " + arg + " " + !inPlaylist))
-					.append(" ").append(Text.literal(e.getValue().name()).formatted(Formatting.WHITE))
+					.append(" ").append(Component.literal(e.getValue().name()).withStyle(ChatFormatting.WHITE))
 					.append(" ").append(button("[" + Money.format(s.priceOf(id)) + (ownPrice ? "" : " (default)") + "]",
-							"/music songprice " + arg + " " + s.priceOf(id), false).formatted(Formatting.GREEN));
+							"/music songprice " + arg + " " + s.priceOf(id), false).withStyle(ChatFormatting.GREEN));
 		}
-		text.append(Text.literal("\n Song prices: type a number, or \"default\" to use the normal price.").formatted(Formatting.GRAY));
-		source.sendFeedback(() -> text, false);
+		text.append(Component.literal("\n Song prices: type a number, or \"default\" to use the normal price.").withStyle(ChatFormatting.GRAY));
+		source.sendSuccess(() -> text, false);
 		return 1;
 	}
 
-	private static MutableText toggleButton(String label, boolean on, String command) {
-		return Text.literal("[" + (on ? "✔ " : "✘ ") + label + "]").styled(s -> s
-				.withColor(on ? Formatting.GREEN : Formatting.DARK_GRAY)
-				.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, command))
-				.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(command))));
+	private static MutableComponent toggleButton(String label, boolean on, String command) {
+		return Component.literal("[" + (on ? "✔ " : "✘ ") + label + "]").withStyle(s -> s
+				.withColor(on ? ChatFormatting.GREEN : ChatFormatting.DARK_GRAY)
+				.withClickEvent(new ClickEvent.RunCommand(command))
+				.withHoverEvent(new HoverEvent.ShowText(Component.literal(command))));
 	}
 
-	private static MutableText button(String label, String command, boolean run) {
-		return Text.literal(label).styled(s -> s.withColor(Formatting.YELLOW)
-				.withClickEvent(new ClickEvent(run ? ClickEvent.Action.RUN_COMMAND : ClickEvent.Action.SUGGEST_COMMAND, command))
-				.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(command))));
+	private static MutableComponent button(String label, String command, boolean run) {
+		return Component.literal(label).withStyle(s -> s.withColor(ChatFormatting.YELLOW)
+				.withClickEvent((run ? new ClickEvent.RunCommand(command) : new ClickEvent.SuggestCommand(command)))
+				.withHoverEvent(new HoverEvent.ShowText(Component.literal(command))));
 	}
 
 	static String formatTime(int seconds) {
 		return seconds / 60 + ":" + String.format("%02d", seconds % 60);
 	}
 
-	static MutableText prefix() {
-		return Text.empty().append(Text.literal("Music:").formatted(Formatting.LIGHT_PURPLE)).append(" ");
+	static MutableComponent prefix() {
+		return Component.empty().append(Component.literal("Music:").withStyle(ChatFormatting.LIGHT_PURPLE)).append(" ");
 	}
 }

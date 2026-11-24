@@ -7,7 +7,7 @@ pluginManagement {
 }
 
 plugins {
-	// Downloads JDK 21 for the Java toolchain if it isn't installed.
+	// Downloads JDK 25 for the Java toolchain if it isn't installed.
 	id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
 }
 
