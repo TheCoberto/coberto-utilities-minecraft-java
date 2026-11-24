@@ -2,65 +2,56 @@ package com.thecoberto.utilities.music;
 
 import com.mojang.serialization.MapCodec;
 
-import net.minecraft.block.BlockRenderType;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.BlockWithEntity;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.BlockEntityTicker;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.BaseEntityBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 /** The Music Selector block. Using it opens the song menu. */
-public class MusicSelectorBlock extends BlockWithEntity {
-	public static final MapCodec<MusicSelectorBlock> CODEC = createCodec(MusicSelectorBlock::new);
+public class MusicSelectorBlock extends BaseEntityBlock {
+	public static final MapCodec<MusicSelectorBlock> CODEC = simpleCodec(MusicSelectorBlock::new);
 
-	public MusicSelectorBlock(Settings settings) {
+	public MusicSelectorBlock(Properties settings) {
 		super(settings);
 	}
 
 	@Override
-	protected MapCodec<? extends BlockWithEntity> getCodec() {
+	protected MapCodec<? extends BaseEntityBlock> codec() {
 		return CODEC;
 	}
 
 	@Override
-	protected BlockRenderType getRenderType(BlockState state) {
-		return BlockRenderType.MODEL;
+	protected RenderShape getRenderShape(BlockState state) {
+		return RenderShape.MODEL;
 	}
 
 	@Override
-	public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
+	public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
 		return new MusicSelectorBlockEntity(pos, state);
 	}
 
 	@Override
-	public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state, BlockEntityType<T> type) {
-		if (world.isClient) return null;
-		return validateTicker(type, MusicSelector.BLOCK_ENTITY,
-				(w, pos, s, station) -> MusicSelectorBlockEntity.tick((ServerWorld) w, station));
+	public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level world, BlockState state, BlockEntityType<T> type) {
+		if (world.isClientSide()) return null;
+		return createTickerHelper(type, MusicSelector.BLOCK_ENTITY,
+				(w, pos, s, station) -> MusicSelectorBlockEntity.tick((ServerLevel) w, station));
 	}
 
 	@Override
-	protected ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, BlockHitResult hit) {
-		if (player instanceof ServerPlayerEntity serverPlayer
+	protected InteractionResult useWithoutItem(BlockState state, Level world, BlockPos pos, Player player, BlockHitResult hit) {
+		if (player instanceof ServerPlayer serverPlayer
 				&& world.getBlockEntity(pos) instanceof MusicSelectorBlockEntity station) {
 			MusicMenu.open(serverPlayer, station);
 		}
-		return ActionResult.success(world.isClient);
-	}
-
-	@Override
-	protected void onStateReplaced(BlockState state, World world, BlockPos pos, BlockState newState, boolean moved) {
-		if (!state.isOf(newState.getBlock()) && !world.isClient
-				&& world.getBlockEntity(pos) instanceof MusicSelectorBlockEntity station) {
-			station.removed();
-		}
-		super.onStateReplaced(state, world, pos, newState, moved);
+		return InteractionResult.SUCCESS;
 	}
 }

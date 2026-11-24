@@ -2,35 +2,35 @@ package com.thecoberto.utilities.crates;
 
 import com.mojang.serialization.MapCodec;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 /** A loot crate. Using it opens it; breaking it gives nothing. */
 public class CrateBlock extends Block {
 	private final String key;
 
-	public CrateBlock(String key, Settings settings) {
+	public CrateBlock(String key, Properties settings) {
 		super(settings);
 		this.key = key;
 	}
 
 	@Override
-	protected MapCodec<? extends Block> getCodec() {
-		return createCodec(settings -> new CrateBlock(key, settings));
+	protected MapCodec<? extends Block> codec() {
+		return simpleCodec(settings -> new CrateBlock(key, settings));
 	}
 
 	@Override
-	protected ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, BlockHitResult hit) {
-		if (world instanceof ServerWorld serverWorld && player instanceof ServerPlayerEntity serverPlayer) {
+	protected InteractionResult useWithoutItem(BlockState state, Level world, BlockPos pos, Player player, BlockHitResult hit) {
+		if (world instanceof ServerLevel serverWorld && player instanceof ServerPlayer serverPlayer) {
 			Crates.open(serverWorld, pos, serverPlayer, key);
 		}
-		return ActionResult.success(world.isClient);
+		return InteractionResult.SUCCESS;
 	}
 }

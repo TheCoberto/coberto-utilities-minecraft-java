@@ -19,29 +19,30 @@ import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.minecraft.command.CommandSource;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.packet.s2c.play.ClearTitleS2CPacket;
-import net.minecraft.network.packet.s2c.play.SubtitleS2CPacket;
-import net.minecraft.network.packet.s2c.play.TitleFadeS2CPacket;
-import net.minecraft.network.packet.s2c.play.TitleS2CPacket;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.game.ClientboundClearTitlesPacket;
+import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.TypedActionResult;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.PersistentState;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.ChatFormatting;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 
 /**
  * Activity Rewards and AFK: players earn Money for every so many minutes
@@ -58,8 +59,9 @@ public final class ActivityRewards {
 
 	// ---------- Settings ----------
 
-	public static class State extends PersistentState {
-		private static final PersistentState.Type<State> TYPE = new PersistentState.Type<>(State::new, State::fromNbt, null);
+	public static class State extends SavedData {
+		private static final SavedDataType<State> TYPE = new SavedDataType<>(Identifier.withDefaultNamespace("coberto_activity_rewards"), State::new,
+			CompoundTag.CODEC.xmap(State::fromNbt, s -> s.writeNbt(new CompoundTag())), null);
 
 		boolean enabled = false;
 		int amount = 100;
@@ -70,23 +72,22 @@ public final class ActivityRewards {
 		int afkSeconds = 300;
 
 		static State get(MinecraftServer server) {
-			return server.getOverworld().getPersistentStateManager().getOrCreate(TYPE, "coberto_activity_rewards");
+			return server.getDataStorage().computeIfAbsent(TYPE);
 		}
 
-		private static State fromNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registries) {
+		private static State fromNbt(CompoundTag nbt) {
 			State s = new State();
-			s.enabled = nbt.getBoolean("enabled");
-			s.amount = nbt.getInt("amount");
-			s.minutes = nbt.getInt("minutes");
-			s.message = nbt.getString("message");
-			s.sound = nbt.getString("sound");
-			s.afkEnabled = nbt.getBoolean("afkEnabled");
-			s.afkSeconds = nbt.getInt("afkSeconds");
+			s.enabled = nbt.getBooleanOr("enabled", false);
+			s.amount = nbt.getIntOr("amount", 0);
+			s.minutes = nbt.getIntOr("minutes", 0);
+			s.message = nbt.getStringOr("message", "");
+			s.sound = nbt.getStringOr("sound", "");
+			s.afkEnabled = nbt.getBooleanOr("afkEnabled", false);
+			s.afkSeconds = nbt.getIntOr("afkSeconds", 0);
 			return s;
 		}
 
-		@Override
-		public NbtCompound writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registries) {
+				CompoundTag writeNbt(CompoundTag nbt) {
 			nbt.putBoolean("enabled", enabled);
 			nbt.putInt("amount", amount);
 			nbt.putInt("minutes", minutes);
@@ -98,19 +99,19 @@ public final class ActivityRewards {
 		}
 	}
 
-	private static void change(ServerCommandSource source, Consumer<State> change, Text announcement) {
+	private static void change(CommandSourceStack source, Consumer<State> change, Component announcement) {
 		State state = State.get(source.getServer());
 		change.accept(state);
-		state.markDirty();
-		source.getServer().getPlayerManager().broadcast(
-				Text.empty().append(Text.literal("Activity Rewards:").formatted(Formatting.GOLD)).append(" ").append(announcement),
+		state.setDirty();
+		source.getServer().getPlayerList().broadcastSystemMessage(
+				Component.empty().append(Component.literal("Activity Rewards:").withStyle(ChatFormatting.GOLD)).append(" ").append(announcement),
 				false);
 	}
 
 	// ---------- Tracking ----------
 
 	private static final class Tracked {
-		Vec3d pos;
+		Vec3 pos;
 		float yaw;
 		float pitch;
 		int idleSeconds;
@@ -125,21 +126,21 @@ public final class ActivityRewards {
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			if (++ticks % 20 == 0) everySecond(server, ticks / 20);
 		});
-		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> tracked.remove(handler.player.getUuid()));
+		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> tracked.remove(handler.player.getUUID()));
 
 		// Chatting and using things count as activity too.
 		ServerMessageEvents.CHAT_MESSAGE.register((message, sender, params) -> markActive(sender));
 		UseItemCallback.EVENT.register((player, world, hand) -> {
 			markActive(player);
-			return TypedActionResult.pass(player.getStackInHand(hand));
+			return InteractionResult.PASS;
 		});
 		UseBlockCallback.EVENT.register((player, world, hand, hit) -> {
 			markActive(player);
-			return ActionResult.PASS;
+			return InteractionResult.PASS;
 		});
 		UseEntityCallback.EVENT.register((player, world, hand, entity, hit) -> {
 			markActive(player);
-			return ActionResult.PASS;
+			return InteractionResult.PASS;
 		});
 		PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, blockEntity) -> markActive(player));
 	}
@@ -148,27 +149,27 @@ public final class ActivityRewards {
 		State settings = State.get(server);
 		Set<UUID> online = new HashSet<>();
 
-		for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-			online.add(player.getUuid());
-			Tracked state = tracked.get(player.getUuid());
+		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+			online.add(player.getUUID());
+			Tracked state = tracked.get(player.getUUID());
 			if (state == null) {
 				state = new Tracked();
-				state.pos = player.getPos();
-				state.yaw = player.getYaw();
-				state.pitch = player.getPitch();
-				tracked.put(player.getUuid(), state);
+				state.pos = player.position();
+				state.yaw = player.getYRot();
+				state.pitch = player.getXRot();
+				tracked.put(player.getUUID(), state);
 				// A leftover tag from before a restart shouldn't stick.
-				player.removeCommandTag(AFK_TAG);
+				player.removeTag(AFK_TAG);
 			}
 
-			boolean moved = player.getPos().squaredDistanceTo(state.pos) > 0.01
-					|| Math.abs(player.getYaw() - state.yaw) > 1
-					|| Math.abs(player.getPitch() - state.pitch) > 1;
+			boolean moved = player.position().distanceToSqr(state.pos) > 0.01
+					|| Math.abs(player.getYRot() - state.yaw) > 1
+					|| Math.abs(player.getXRot() - state.pitch) > 1;
 			if (moved) markActive(player);
 			else state.idleSeconds++;
-			state.pos = player.getPos();
-			state.yaw = player.getYaw();
-			state.pitch = player.getPitch();
+			state.pos = player.position();
+			state.yaw = player.getYRot();
+			state.pitch = player.getXRot();
 
 			if (settings.afkEnabled && !state.afk && state.idleSeconds >= settings.afkSeconds) {
 				setAfk(player, state, true);
@@ -189,80 +190,80 @@ public final class ActivityRewards {
 		tracked.keySet().removeIf(id -> !online.contains(id));
 	}
 
-	private static void markActive(PlayerEntity player) {
-		if (!(player instanceof ServerPlayerEntity serverPlayer)) return;
-		Tracked state = tracked.get(player.getUuid());
+	private static void markActive(Player player) {
+		if (!(player instanceof ServerPlayer serverPlayer)) return;
+		Tracked state = tracked.get(player.getUUID());
 		if (state == null) return;
 		state.idleSeconds = 0;
 		if (state.afk) setAfk(serverPlayer, state, false);
 	}
 
-	private static void setAfk(ServerPlayerEntity player, Tracked state, boolean afk) {
+	private static void setAfk(ServerPlayer player, Tracked state, boolean afk) {
 		state.afk = afk;
 		if (afk) {
-			player.addCommandTag(AFK_TAG);
-			showAfkTitle(player, State.get(player.server), true);
+			player.addTag(AFK_TAG);
+			showAfkTitle(player, State.get(player.level().getServer()), true);
 		} else {
-			player.removeCommandTag(AFK_TAG);
-			player.networkHandler.sendPacket(new ClearTitleS2CPacket(true));
-			player.sendMessage(Text.literal("Welcome back!").formatted(Formatting.GREEN), true);
+			player.removeTag(AFK_TAG);
+			player.connection.send(new ClientboundClearTitlesPacket(true));
+			player.sendOverlayMessage(Component.literal("Welcome back!").withStyle(ChatFormatting.GREEN));
 		}
 	}
 
-	private static void showAfkTitle(ServerPlayerEntity player, State settings, boolean first) {
+	private static void showAfkTitle(ServerPlayer player, State settings, boolean first) {
 		// Refreshed every 2 seconds while AFK, so it stays up.
-		player.networkHandler.sendPacket(new TitleFadeS2CPacket(first ? 10 : 0, 60, 10));
-		player.networkHandler.sendPacket(new SubtitleS2CPacket(Text.literal(
-				settings.enabled ? "Move to keep earning activity rewards" : "Move to come back").formatted(Formatting.GRAY)));
-		player.networkHandler.sendPacket(new TitleS2CPacket(Text.literal("You are AFK!").formatted(Formatting.RED)));
+		player.connection.send(new ClientboundSetTitlesAnimationPacket(first ? 10 : 0, 60, 10));
+		player.connection.send(new ClientboundSetSubtitleTextPacket(Component.literal(
+				settings.enabled ? "Move to keep earning activity rewards" : "Move to come back").withStyle(ChatFormatting.GRAY)));
+		player.connection.send(new ClientboundSetTitleTextPacket(Component.literal("You are AFK!").withStyle(ChatFormatting.RED)));
 	}
 
-	private static void pay(ServerPlayerEntity player, State settings) {
+	private static void pay(ServerPlayer player, State settings) {
 		Money.add(player, settings.amount);
-		player.sendMessage(Text.literal(colorize(settings.message)
+		player.sendSystemMessage(Component.literal(colorize(settings.message)
 				.replace("{amount}", Money.format(settings.amount))
 				.replace("{player}", player.getName().getString())
 				.replace("{minutes}", String.valueOf(settings.minutes))));
 		Identifier sound = settings.sound.isEmpty() ? null : Identifier.tryParse(settings.sound);
 		if (sound != null) {
-			player.playSoundToPlayer(SoundEvent.of(sound), SoundCategory.MASTER, 1.0f, 1.0f);
+			Sounds.play(player, SoundEvent.createVariableRangeEvent(sound), SoundSource.MASTER, 1.0f, 1.0f);
 		}
 	}
 
 	// ---------- Commands ----------
 
-	static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
-		dispatcher.register(CommandManager.literal("activity")
-				.requires(s -> s.hasPermissionLevel(2))
+	static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+		dispatcher.register(Commands.literal("activity")
+				.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
 				.executes(c -> {
-					Text text = describe(State.get(c.getSource().getServer()));
-					c.getSource().sendFeedback(() -> text, false);
+					Component text = describe(State.get(c.getSource().getServer()));
+					c.getSource().sendSuccess(() -> text, false);
 					return 1;
 				})
-				.then(CommandManager.argument("enabled", BoolArgumentType.bool()).executes(c -> {
+				.then(Commands.argument("enabled", BoolArgumentType.bool()).executes(c -> {
 					boolean enabled = BoolArgumentType.getBool(c, "enabled");
 					change(c.getSource(), s -> s.enabled = enabled, enabled
-							? Text.empty().append(Text.literal("On").formatted(Formatting.GREEN)).append(". Active players now earn Money over time.")
-							: Text.empty().append(Text.literal("Off").formatted(Formatting.RED)).append("."));
+							? Component.empty().append(Component.literal("On").withStyle(ChatFormatting.GREEN)).append(". Active players now earn Money over time.")
+							: Component.empty().append(Component.literal("Off").withStyle(ChatFormatting.RED)).append("."));
 					return 1;
 				})));
 
-		dispatcher.register(CommandManager.literal("activityreward")
-				.requires(s -> s.hasPermissionLevel(2))
-				.then(CommandManager.argument("amount", IntegerArgumentType.integer(1, Money.MAX_AMOUNT))
-						.then(CommandManager.argument("minutes", IntegerArgumentType.integer(1, 1440)).executes(c -> {
+		dispatcher.register(Commands.literal("activityreward")
+				.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+				.then(Commands.argument("amount", IntegerArgumentType.integer(1, Money.MAX_AMOUNT))
+						.then(Commands.argument("minutes", IntegerArgumentType.integer(1, 1440)).executes(c -> {
 							int amount = IntegerArgumentType.getInteger(c, "amount");
 							int minutes = IntegerArgumentType.getInteger(c, "minutes");
 							change(c.getSource(), s -> { s.amount = amount; s.minutes = minutes; },
-									Text.literal("Players now earn ")
-											.append(Text.literal(Money.format(amount) + " Money").formatted(Formatting.GREEN))
+									Component.literal("Players now earn ")
+											.append(Component.literal(Money.format(amount) + " Money").withStyle(ChatFormatting.GREEN))
 											.append(" every " + plural(minutes, "minute") + " they're active."));
 							return 1;
 						}))));
 
-		dispatcher.register(CommandManager.literal("activitymessage")
-				.requires(s -> s.hasPermissionLevel(2))
-				.then(CommandManager.argument("message", StringArgumentType.greedyString()).executes(c -> {
+		dispatcher.register(Commands.literal("activitymessage")
+				.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+				.then(Commands.argument("message", StringArgumentType.greedyString()).executes(c -> {
 					String message = StringArgumentType.getString(c, "message").trim();
 					// Quotes are optional, like on Bedrock.
 					if (message.length() >= 2 && message.startsWith("\"") && message.endsWith("\"")) {
@@ -271,59 +272,59 @@ public final class ActivityRewards {
 					boolean reset = message.equalsIgnoreCase("reset");
 					String newMessage = reset ? DEFAULT_MESSAGE : message;
 					change(c.getSource(), s -> s.message = newMessage,
-							Text.literal(reset ? "Reward message reset." : "Reward message is now: " + colorize(newMessage)));
+							Component.literal(reset ? "Reward message reset." : "Reward message is now: " + colorize(newMessage)));
 					return 1;
 				})));
 
-		dispatcher.register(CommandManager.literal("activitysound")
-				.requires(s -> s.hasPermissionLevel(2))
-				.then(CommandManager.argument("sound", StringArgumentType.greedyString())
-						.suggests((c, b) -> CommandSource.suggestIdentifiers(Registries.SOUND_EVENT.getIds(), b))
+		dispatcher.register(Commands.literal("activitysound")
+				.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+				.then(Commands.argument("sound", StringArgumentType.greedyString())
+						.suggests((c, b) -> SharedSuggestionProvider.suggestResource(BuiltInRegistries.SOUND_EVENT.keySet(), b))
 						.executes(c -> {
 							String sound = StringArgumentType.getString(c, "sound").trim();
 							if (sound.equalsIgnoreCase("none")) {
-								change(c.getSource(), s -> s.sound = "", Text.literal("Rewards no longer play a sound."));
+								change(c.getSource(), s -> s.sound = "", Component.literal("Rewards no longer play a sound."));
 								return 1;
 							}
 							Identifier id = Identifier.tryParse(sound);
 							if (id == null) {
-								c.getSource().sendError(Text.literal("That isn't a sound name. Try entity.player.levelup, or none."));
+								c.getSource().sendFailure(Component.literal("That isn't a sound name. Try entity.player.levelup, or none."));
 								return 0;
 							}
-							change(c.getSource(), s -> s.sound = id.toString(), Text.literal("Rewards now play ")
-									.append(Text.literal(id.toString()).formatted(Formatting.YELLOW)).append("."));
+							change(c.getSource(), s -> s.sound = id.toString(), Component.literal("Rewards now play ")
+									.append(Component.literal(id.toString()).withStyle(ChatFormatting.YELLOW)).append("."));
 							return 1;
 						})));
 
-		dispatcher.register(CommandManager.literal("afk")
-				.requires(s -> s.hasPermissionLevel(2))
-				.then(CommandManager.argument("enabled", BoolArgumentType.bool()).executes(c -> {
+		dispatcher.register(Commands.literal("afk")
+				.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+				.then(Commands.argument("enabled", BoolArgumentType.bool()).executes(c -> {
 					boolean enabled = BoolArgumentType.getBool(c, "enabled");
 					change(c.getSource(), s -> s.afkEnabled = enabled, enabled
-							? Text.literal("AFK detection ").append(Text.literal("on").formatted(Formatting.GREEN)).append(".")
-							: Text.literal("AFK detection ").append(Text.literal("off").formatted(Formatting.RED)).append(". Nobody is marked AFK."));
+							? Component.literal("AFK detection ").append(Component.literal("on").withStyle(ChatFormatting.GREEN)).append(".")
+							: Component.literal("AFK detection ").append(Component.literal("off").withStyle(ChatFormatting.RED)).append(". Nobody is marked AFK."));
 					return 1;
 				})));
 
-		dispatcher.register(CommandManager.literal("afktime")
-				.requires(s -> s.hasPermissionLevel(2))
-				.then(CommandManager.argument("seconds", IntegerArgumentType.integer(10, 86400)).executes(c -> {
+		dispatcher.register(Commands.literal("afktime")
+				.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+				.then(Commands.argument("seconds", IntegerArgumentType.integer(10, 86400)).executes(c -> {
 					int seconds = IntegerArgumentType.getInteger(c, "seconds");
 					change(c.getSource(), s -> s.afkSeconds = seconds,
-							Text.literal("Players are now AFK after " + durationText(seconds) + " without moving."));
+							Component.literal("Players are now AFK after " + durationText(seconds) + " without moving."));
 					return 1;
 				})));
 	}
 
 	// ---------- Text ----------
 
-	private static Text describe(State s) {
-		MutableText on = Text.literal("on").formatted(Formatting.GREEN);
-		MutableText off = Text.literal("off").formatted(Formatting.RED);
-		return Text.empty()
-				.append(Text.literal("Activity Rewards").formatted(Formatting.GOLD)).append(" are ")
+	private static Component describe(State s) {
+		MutableComponent on = Component.literal("on").withStyle(ChatFormatting.GREEN);
+		MutableComponent off = Component.literal("off").withStyle(ChatFormatting.RED);
+		return Component.empty()
+				.append(Component.literal("Activity Rewards").withStyle(ChatFormatting.GOLD)).append(" are ")
 				.append(s.enabled ? on : off).append(".\nReward: ")
-				.append(Text.literal(Money.format(s.amount) + " Money").formatted(Formatting.GREEN))
+				.append(Component.literal(Money.format(s.amount) + " Money").withStyle(ChatFormatting.GREEN))
 				.append(" every " + plural(s.minutes, "minute") + " of activity.\nMessage: " + colorize(s.message)
 						+ "\nSound: " + (s.sound.isEmpty() ? "none" : s.sound) + "\nAFK detection: ")
 				.append(s.afkEnabled ? on.copy() : off.copy())

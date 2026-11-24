@@ -2,15 +2,20 @@ package com.thecoberto.utilities;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 /**
  * Coberto's Utilities: Java port of the Bedrock bundle of world utilities.
  * Each feature lives in its own class.
  */
 public class CobertoUtilities implements ModInitializer {
+	/** Vanilla's Functional Blocks creative tab (the constant is private in 26.x). */
+	public static final net.minecraft.resources.ResourceKey<net.minecraft.world.item.CreativeModeTab> FUNCTIONAL_BLOCKS =
+			net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.CREATIVE_MODE_TAB,
+					net.minecraft.resources.Identifier.withDefaultNamespace("functional_blocks"));
+
 	@Override
 	public void onInitialize() {
 		com.thecoberto.utilities.crates.Crates.registerBlocks();
@@ -37,7 +42,7 @@ public class CobertoUtilities implements ModInitializer {
 	}
 
 	/** "Utilities: " in gold, on an unstyled root so text appended after it isn't gold too. */
-	static MutableText prefix() {
-		return Text.empty().append(Text.literal("Utilities:").formatted(Formatting.GOLD)).append(" ");
+	static MutableComponent prefix() {
+		return Component.empty().append(Component.literal("Utilities:").withStyle(ChatFormatting.GOLD)).append(" ");
 	}
 }

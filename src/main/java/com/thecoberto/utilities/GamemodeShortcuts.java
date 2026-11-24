@@ -7,13 +7,13 @@ import java.util.stream.Collectors;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
-import net.minecraft.command.argument.EntityArgumentType;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.world.GameMode;
+import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.level.GameType;
 
 /**
  * /gms, /gmc, /gma and /gmsp: short for /gamemode <mode> [players]. With no
@@ -22,46 +22,46 @@ import net.minecraft.world.GameMode;
 public final class GamemodeShortcuts {
 	private GamemodeShortcuts() {}
 
-	private record Shortcut(String name, GameMode mode, String label) {}
+	private record Shortcut(String name, GameType mode, String label) {}
 
 	private static final List<Shortcut> SHORTCUTS = List.of(
-			new Shortcut("gms", GameMode.SURVIVAL, "Survival"),
-			new Shortcut("gmc", GameMode.CREATIVE, "Creative"),
-			new Shortcut("gma", GameMode.ADVENTURE, "Adventure"),
-			new Shortcut("gmsp", GameMode.SPECTATOR, "Spectator"));
+			new Shortcut("gms", GameType.SURVIVAL, "Survival"),
+			new Shortcut("gmc", GameType.CREATIVE, "Creative"),
+			new Shortcut("gma", GameType.ADVENTURE, "Adventure"),
+			new Shortcut("gmsp", GameType.SPECTATOR, "Spectator"));
 
-	static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
+	static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
 		for (Shortcut shortcut : SHORTCUTS) {
-			dispatcher.register(CommandManager.literal(shortcut.name())
-					.requires(s -> s.hasPermissionLevel(2))
+			dispatcher.register(Commands.literal(shortcut.name())
+					.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
 					.executes(context -> {
-						ServerCommandSource source = context.getSource();
-						ServerPlayerEntity self = source.getPlayer();
+						CommandSourceStack source = context.getSource();
+						ServerPlayer self = source.getPlayer();
 						if (self == null) {
-							source.sendError(Text.literal("Choose which players to change."));
+							source.sendFailure(Component.literal("Choose which players to change."));
 							return 0;
 						}
 						return apply(source, List.of(self), shortcut);
 					})
-					.then(CommandManager.argument("players", EntityArgumentType.players())
+					.then(Commands.argument("players", EntityArgument.players())
 							.executes(context -> apply(context.getSource(),
-									EntityArgumentType.getPlayers(context, "players"), shortcut))));
+									EntityArgument.getPlayers(context, "players"), shortcut))));
 		}
 	}
 
-	private static int apply(ServerCommandSource source, Collection<ServerPlayerEntity> players, Shortcut shortcut)
+	private static int apply(CommandSourceStack source, Collection<ServerPlayer> players, Shortcut shortcut)
 			throws CommandSyntaxException {
-		for (ServerPlayerEntity player : players) {
-			player.changeGameMode(shortcut.mode());
-			player.sendMessage(Text.literal("Your game mode is now ")
-					.append(Text.literal(shortcut.label()).formatted(Formatting.YELLOW))
+		for (ServerPlayer player : players) {
+			player.setGameMode(shortcut.mode());
+			player.sendSystemMessage(Component.literal("Your game mode is now ")
+					.append(Component.literal(shortcut.label()).withStyle(ChatFormatting.YELLOW))
 					.append("."));
 		}
-		ServerPlayerEntity self = source.getPlayer();
+		ServerPlayer self = source.getPlayer();
 		String who = players.size() == 1 && players.contains(self)
 				? "your"
 				: players.stream().map(p -> p.getName().getString()).collect(Collectors.joining(", ")) + "'s";
-		source.sendFeedback(() -> Text.literal("Set " + who + " game mode to " + shortcut.label() + "."), true);
+		source.sendSuccess(() -> Component.literal("Set " + who + " game mode to " + shortcut.label() + "."), true);
 		return players.size();
 	}
 }

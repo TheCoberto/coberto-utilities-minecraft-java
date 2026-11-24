@@ -6,10 +6,10 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 
 import com.thecoberto.utilities.CreeperGriefing;
 
-import net.minecraft.entity.mob.CreeperEntity;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.monster.Creeper;
+import net.minecraft.world.level.Level;
 
-@Mixin(CreeperEntity.class)
+@Mixin(Creeper.class)
 public abstract class CreeperEntityMixin {
 	/**
 	 * Creepers explode as a MOB explosion, which breaks blocks. Unless creeper
@@ -17,13 +17,13 @@ public abstract class CreeperEntityMixin {
 	 * but blocks are left alone.
 	 */
 	@ModifyArg(
-			method = "explode",
-			at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;createExplosion(Lnet/minecraft/entity/Entity;DDDFLnet/minecraft/world/World$ExplosionSourceType;)Lnet/minecraft/world/explosion/Explosion;"),
+			method = "explodeCreeper",
+			at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;explode(Lnet/minecraft/world/entity/Entity;DDDFLnet/minecraft/world/level/Level$ExplosionInteraction;)V"),
 			index = 5)
-	private World.ExplosionSourceType coberto$keepBlocks(World.ExplosionSourceType type) {
-		CreeperEntity creeper = (CreeperEntity) (Object) this;
-		var server = creeper.getServer();
+	private Level.ExplosionInteraction coberto$keepBlocks(Level.ExplosionInteraction type) {
+		Creeper creeper = (Creeper) (Object) this;
+		var server = creeper.level().getServer();
 		if (server == null || CreeperGriefing.creepersBreakBlocks(server)) return type;
-		return World.ExplosionSourceType.NONE;
+		return Level.ExplosionInteraction.NONE;
 	}
 }

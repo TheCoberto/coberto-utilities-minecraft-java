@@ -5,16 +5,19 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.PersistentState;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 
 /** The adventure zones, saved in the world (data/coberto_adventure_zones.dat). */
-public class ZonesState extends PersistentState {
-	private static final PersistentState.Type<ZonesState> TYPE = new PersistentState.Type<>(ZonesState::new, ZonesState::fromNbt, null);
+public class ZonesState extends SavedData {
+	private static final SavedDataType<ZonesState> TYPE = new SavedDataType<>(Identifier.withDefaultNamespace("coberto_adventure_zones"), ZonesState::new,
+			CompoundTag.CODEC.xmap(ZonesState::fromNbt, s -> s.writeNbt(new CompoundTag())), null);
 
 	public static final class Zone {
 		String name;
@@ -30,7 +33,7 @@ public class ZonesState extends PersistentState {
 	final List<Zone> zones = new ArrayList<>();
 
 	public static ZonesState get(MinecraftServer server) {
-		return server.getOverworld().getPersistentStateManager().getOrCreate(TYPE, "coberto_adventure_zones");
+		return server.getDataStorage().computeIfAbsent(TYPE);
 	}
 
 	Optional<Zone> find(String name) {
@@ -38,32 +41,31 @@ public class ZonesState extends PersistentState {
 		return zones.stream().filter(z -> z.name.toLowerCase(Locale.ROOT).equals(lower)).findFirst();
 	}
 
-	private static ZonesState fromNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registries) {
+	private static ZonesState fromNbt(CompoundTag nbt) {
 		ZonesState state = new ZonesState();
-		NbtList list = nbt.getList("zones", NbtElement.COMPOUND_TYPE);
+		ListTag list = nbt.getListOrEmpty("zones");
 		for (int i = 0; i < list.size(); i++) {
-			NbtCompound c = list.getCompound(i);
+			CompoundTag c = list.getCompoundOrEmpty(i);
 			Zone z = new Zone();
-			z.name = c.getString("name");
-			z.dimension = c.getString("dimension");
-			z.x = c.getInt("x");
-			z.y = c.getInt("y");
-			z.z = c.getInt("z");
-			z.radius = Math.max(1, c.getInt("radius"));
-			z.column = c.getBoolean("column");
-			z.enabled = c.getBoolean("enabled");
-			z.enterMessage = c.getString("enterMessage");
-			z.leaveMessage = c.getString("leaveMessage");
+			z.name = c.getStringOr("name", "");
+			z.dimension = c.getStringOr("dimension", "");
+			z.x = c.getIntOr("x", 0);
+			z.y = c.getIntOr("y", 0);
+			z.z = c.getIntOr("z", 0);
+			z.radius = Math.max(1, c.getIntOr("radius", 0));
+			z.column = c.getBooleanOr("column", false);
+			z.enabled = c.getBooleanOr("enabled", false);
+			z.enterMessage = c.getStringOr("enterMessage", "");
+			z.leaveMessage = c.getStringOr("leaveMessage", "");
 			state.zones.add(z);
 		}
 		return state;
 	}
 
-	@Override
-	public NbtCompound writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registries) {
-		NbtList list = new NbtList();
+		CompoundTag writeNbt(CompoundTag nbt) {
+		ListTag list = new ListTag();
 		for (Zone z : zones) {
-			NbtCompound c = new NbtCompound();
+			CompoundTag c = new CompoundTag();
 			c.putString("name", z.name);
 			c.putString("dimension", z.dimension);
 			c.putInt("x", z.x);

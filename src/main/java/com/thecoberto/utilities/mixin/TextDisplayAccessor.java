@@ -3,12 +3,12 @@ package com.thecoberto.utilities.mixin;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-import net.minecraft.entity.decoration.DisplayEntity;
-import net.minecraft.text.Text;
+import net.minecraft.world.entity.Display;
+import net.minecraft.network.chat.Component;
 
 /** Text displays only set their text from NBT; this lets the Music Selector set it directly. */
-@Mixin(DisplayEntity.TextDisplayEntity.class)
+@Mixin(Display.TextDisplay.class)
 public interface TextDisplayAccessor {
 	@Invoker("setText")
-	void coberto$setText(Text text);
+	void coberto$setText(Component text);
 }

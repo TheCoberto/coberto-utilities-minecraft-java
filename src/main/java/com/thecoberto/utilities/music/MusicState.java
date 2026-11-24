@@ -6,20 +6,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtString;
-import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.PersistentState;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 
 /**
  * Music Selector settings, which apply to every selector, plus when each player
  * can queue again. Saved in the world (data/coberto_music.dat).
  */
-public class MusicState extends PersistentState {
-	private static final PersistentState.Type<MusicState> TYPE = new PersistentState.Type<>(MusicState::new, MusicState::fromNbt, null);
+public class MusicState extends SavedData {
+	private static final SavedDataType<MusicState> TYPE = new SavedDataType<>(Identifier.withDefaultNamespace("coberto_music"), MusicState::new,
+			CompoundTag.CODEC.xmap(MusicState::fromNbt, s -> s.writeNbt(new CompoundTag())), null);
 
 	int price = 500; // Money to queue a song
 	Map<String, Integer> prices = new HashMap<>(); // per-song prices, overriding price
@@ -37,7 +40,7 @@ public class MusicState extends PersistentState {
 	private boolean checked;
 
 	public static MusicState get(MinecraftServer server) {
-		MusicState state = server.getOverworld().getPersistentStateManager().getOrCreate(TYPE, "coberto_music");
+		MusicState state = server.getDataStorage().computeIfAbsent(TYPE);
 		if (!state.checked) {
 			state.checked = true;
 			var tracks = Track.all(server);
@@ -49,7 +52,7 @@ public class MusicState extends PersistentState {
 				if (!state.playlist.contains(id)) state.playlist.add(id);
 			}
 			state.known = new ArrayList<>(tracks.keySet());
-			state.markDirty();
+			state.setDirty();
 		}
 		return state;
 	}
@@ -58,35 +61,35 @@ public class MusicState extends PersistentState {
 		return prices.getOrDefault(id, price);
 	}
 
-	private static List<String> readList(NbtCompound nbt, String key) {
+	private static List<String> readList(CompoundTag nbt, String key) {
 		List<String> list = new ArrayList<>();
-		NbtList nbtList = nbt.getList(key, NbtElement.STRING_TYPE);
-		for (int i = 0; i < nbtList.size(); i++) list.add(nbtList.getString(i));
+		ListTag nbtList = nbt.getListOrEmpty(key);
+		for (int i = 0; i < nbtList.size(); i++) list.add(nbtList.getStringOr(i, ""));
 		return list;
 	}
 
-	private static NbtList writeList(List<String> list) {
-		NbtList nbtList = new NbtList();
-		for (String s : list) nbtList.add(NbtString.of(s));
+	private static ListTag writeList(List<String> list) {
+		ListTag nbtList = new ListTag();
+		for (String s : list) nbtList.add(StringTag.valueOf(s));
 		return nbtList;
 	}
 
-	private static MusicState fromNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registries) {
+	private static MusicState fromNbt(CompoundTag nbt) {
 		MusicState s = new MusicState();
-		s.price = nbt.getInt("price");
-		NbtCompound prices = nbt.getCompound("prices");
-		for (String key : prices.getKeys()) s.prices.put(key, prices.getInt(key));
-		s.cooldown = nbt.getInt("cooldown");
-		s.maxQueue = Math.max(1, nbt.getInt("maxQueue"));
+		s.price = nbt.getIntOr("price", 0);
+		CompoundTag prices = nbt.getCompoundOrEmpty("prices");
+		for (String key : prices.keySet()) s.prices.put(key, prices.getIntOr(key, 0));
+		s.cooldown = nbt.getIntOr("cooldown", 0);
+		s.maxQueue = Math.max(1, nbt.getIntOr("maxQueue", 0));
 		s.allowed = readList(nbt, "allowed");
-		s.autoplay = nbt.getBoolean("autoplay");
-		s.shuffle = nbt.getBoolean("shuffle");
+		s.autoplay = nbt.getBooleanOr("autoplay", false);
+		s.shuffle = nbt.getBooleanOr("shuffle", false);
 		s.playlist = readList(nbt, "playlist");
 		s.known = readList(nbt, "known");
-		NbtCompound cooldowns = nbt.getCompound("cooldowns");
-		for (String key : cooldowns.getKeys()) {
+		CompoundTag cooldowns = nbt.getCompoundOrEmpty("cooldowns");
+		for (String key : cooldowns.keySet()) {
 			try {
-				s.cooldowns.put(UUID.fromString(key), cooldowns.getLong(key));
+				s.cooldowns.put(UUID.fromString(key), cooldowns.getLongOr(key, 0L));
 			} catch (IllegalArgumentException ignored) {
 				// Not a player id.
 			}
@@ -94,10 +97,9 @@ public class MusicState extends PersistentState {
 		return s;
 	}
 
-	@Override
-	public NbtCompound writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registries) {
+		CompoundTag writeNbt(CompoundTag nbt) {
 		nbt.putInt("price", price);
-		NbtCompound pricesNbt = new NbtCompound();
+		CompoundTag pricesNbt = new CompoundTag();
 		prices.forEach(pricesNbt::putInt);
 		nbt.put("prices", pricesNbt);
 		nbt.putInt("cooldown", cooldown);
@@ -107,7 +109,7 @@ public class MusicState extends PersistentState {
 		nbt.putBoolean("shuffle", shuffle);
 		nbt.put("playlist", writeList(playlist));
 		nbt.put("known", writeList(known));
-		NbtCompound cooldownsNbt = new NbtCompound();
+		CompoundTag cooldownsNbt = new CompoundTag();
 		long now = System.currentTimeMillis();
 		cooldowns.forEach((uuid, until) -> {
 			if (until > now) cooldownsNbt.putLong(uuid.toString(), until);
