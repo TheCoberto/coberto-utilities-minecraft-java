@@ -3,7 +3,7 @@ version: '${version}'
 main: com.thecoberto.utilities.CobertoUtilities
 api-version: '1.21'
 softdepend: [Vault, Essentials]
-description: Coberto's Utilities for Paper servers. Classes, Activity Rewards, Loot Crates, the Music Selector, the Prank Button and World Cleanup.
+description: Coberto's Utilities for Paper servers. Classes, Activity Rewards, Loot Crates, the Music Selector, the Prank Button, World Cleanup and /unload.
 author: TheCoberto
 commands:
   class:
@@ -53,7 +53,18 @@ commands:
   prankbutton:
     description: Change a Prank Button (its owner or an operator)
     usage: /prankbutton <x> <y> <z> [setting] [value]
+  unload:
+    description: Put your items into nearby chests that already hold the same item
+    usage: /unload
+    permission: cobertoutilities.unload
+  dump:
+    description: Empty your inventory into nearby chests (not your hotbar or armor)
+    usage: /dump
+    permission: cobertoutilities.unload
 permissions:
+  cobertoutilities.unload:
+    description: Use /unload and /dump
+    default: true
   cobertoutilities.admin:
     description: Give special blocks and change Activity Rewards, crates, music and any Prank Button
     default: op
