@@ -38,6 +38,8 @@ public record Track(String id, String name, int length, String sound, Material i
 		add("creator", "Creator", 176);
 		add("creator_music_box", "Creator (Music Box)", 73);
 		add("precipice", "Precipice", 299);
+		add("tears", "Tears", 175);
+		add("lava_chicken", "Lava Chicken", 135);
 	}
 
 	/** id -> track, in menu order. */
