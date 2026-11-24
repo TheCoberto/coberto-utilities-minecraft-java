@@ -37,6 +37,7 @@ public final class CobertoUtilities extends JavaPlugin implements TabExecutor {
 		new PrankButton(this, blocks);
 		new WorldCleanup(this);
 		new Unload(this);
+		new AreaTitles(this);
 
 		getCommand("utilitiesgive").setExecutor(this);
 		getCommand("utilitiesgive").setTabCompleter(this);

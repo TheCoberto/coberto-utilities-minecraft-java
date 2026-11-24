@@ -53,6 +53,10 @@ commands:
   prankbutton:
     description: Change a Prank Button (its owner or an operator)
     usage: /prankbutton <x> <y> <z> [setting] [value]
+  areatitle:
+    description: Titles that show when players walk into an area
+    usage: /areatitle <create <name> <radius>|set <name> <title|subtitle|radius|cooldown|here> [value]|remove <name>|test <name>|list>
+    permission: cobertoutilities.admin
   unload:
     description: Put your items into nearby chests that already hold the same item
     usage: /unload
