@@ -140,7 +140,7 @@ public final class PrankButton implements SpecialBlocks.Kind, TabExecutor {
 	@Override public String id() { return "prank_button"; }
 
 	@Override public boolean adminOnly() { return true; }
-	@Override public String name() { return "Prank Button"; }
+	@Override public String name() { return "Odd Button"; }
 	@Override public NamedTextColor color() { return NamedTextColor.RED; }
 	@Override public String lore() { return "Whoever pushes it gets pranked. Sneak and use it to set it up."; }
 	@Override public Material defaultMaterial() { return Material.CRIMSON_BUTTON; }
@@ -152,7 +152,7 @@ public final class PrankButton implements SpecialBlocks.Kind, TabExecutor {
 		s.ownerId = player.getUniqueId();
 		save();
 		updateLabel(block);
-		player.sendMessage(prefix().append(Component.text("Sneak and use your Prank Button (with an empty hand) to set the message and the prank.")));
+		player.sendMessage(prefix().append(Component.text("Sneak and use your Odd Button (with an empty hand) to set the message and the prank.")));
 	}
 
 	@Override
@@ -217,7 +217,7 @@ public final class PrankButton implements SpecialBlocks.Kind, TabExecutor {
 		if (x == null || y == null || z == null) return false;
 		Block block = world.getBlockAt(x, y, z);
 		if (blocks.kindAt(block) != this) {
-			Msg.error(sender, "There's no Prank Button there.");
+			Msg.error(sender, "There's no Odd Button there.");
 			return true;
 		}
 		Setup s = setup(block);
@@ -293,7 +293,7 @@ public final class PrankButton implements SpecialBlocks.Kind, TabExecutor {
 	private static void showSetup(CommandSender sender, Block block, Setup b) {
 		String cmd = "/prankbutton " + block.getX() + " " + block.getY() + " " + block.getZ() + " ";
 		NamedTextColor y = NamedTextColor.YELLOW;
-		Component text = Component.text("Prank Button", NamedTextColor.RED, TextDecoration.BOLD)
+		Component text = Component.text("Odd Button", NamedTextColor.RED, TextDecoration.BOLD)
 				.append(Component.text(b.owner.isEmpty() ? "" : " (" + b.owner + "'s)", NamedTextColor.GRAY).decoration(TextDecoration.BOLD, false))
 				.append(Component.text(": click to change.", NamedTextColor.WHITE).decoration(TextDecoration.BOLD, false))
 				.append(Component.text("\n Sign: ")).append(Component.text(b.message, NamedTextColor.RED))
