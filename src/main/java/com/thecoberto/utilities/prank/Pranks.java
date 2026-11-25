@@ -19,7 +19,6 @@ import com.thecoberto.utilities.Tasks;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.effect.MobEffectInstance;

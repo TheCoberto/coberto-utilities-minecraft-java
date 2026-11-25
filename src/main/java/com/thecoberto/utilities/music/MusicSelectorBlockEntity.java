@@ -12,7 +12,6 @@ import com.thecoberto.utilities.mixin.TextDisplayAccessor;
 
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Display;
 import net.minecraft.network.protocol.game.ClientboundStopSoundPacket;
 import net.minecraft.server.level.ServerPlayer;
