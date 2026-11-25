@@ -2,6 +2,9 @@
 
 Fabric mod versions (0.x) and the Paper plugin (`paper-plugin/`, "Paper x.y") are listed together, newest first.
 
+## Paper 1.7.2
+- **Bedrock Menu**: new **Hotbar Refill On/Off** (`/refill`) and **Best Tools On/Off** (`/bt`) buttons.
+
 ## Paper 1.7.1
 - Chest sorting (Chestsort+) no longer scrambles plugin menus (server menus, shops, the Bedrock Menu and other GUIs) when they open. Real chests, barrels, shulker boxes, ender chests, minecarts and pack animals still sort.
 

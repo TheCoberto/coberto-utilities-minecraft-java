@@ -44,6 +44,12 @@ bedrock_menu:
     - text: Lumberjack On/Off
       command: lumberjack
       image: textures/items/iron_axe
+    - text: Hotbar Refill On/Off
+      command: refill
+      image: textures/blocks/hopper_top
+    - text: Best Tools On/Off
+      command: bt
+      image: textures/items/diamond_pickaxe
     - text: Slots Leaderboard
       command: slotstop
       image: textures/items/emerald
