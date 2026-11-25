@@ -9,3 +9,41 @@ blocks:
   holiday_crate: SNOW_BLOCK
   music_selector: JUKEBOX
   prank_button: CRIMSON_BUTTON
+
+# Bedrock Menu: Bedrock players right-click a compass to get this menu. Each button
+# runs its command as that player. image is optional: a Bedrock texture path
+# (like textures/items/compass_item) or an https:// link to a picture.
+bedrock_menu:
+  title: Crobus SMP
+  content: Pick something to do.
+  buttons:
+    - text: What's New
+      command: whatsnew
+      image: textures/items/book_writable
+    - text: Spawn
+      command: spawn
+      image: textures/items/bed_red
+    - text: Home
+      command: home
+      image: textures/items/door_wood
+    - text: Balance
+      command: bal
+      image: textures/items/gold_ingot
+    - text: Peaceful or Fighter
+      command: pvpmenu
+      image: textures/items/diamond_sword
+    - text: Unload into Chests
+      command: unload
+      image: textures/blocks/chest_front
+    - text: Dump into Chests
+      command: dump
+      image: textures/blocks/barrel_side
+    - text: Chest Sorting
+      command: chestsort
+      image: textures/items/hopper
+    - text: Lumberjack On/Off
+      command: lumberjack
+      image: textures/items/iron_axe
+    - text: Slots Leaderboard
+      command: slotstop
+      image: textures/items/emerald

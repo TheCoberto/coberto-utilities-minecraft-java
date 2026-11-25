@@ -2,8 +2,8 @@ name: CobertoUtilities
 version: '${version}'
 main: com.thecoberto.utilities.CobertoUtilities
 api-version: '1.21'
-softdepend: [Vault, Essentials]
-description: Coberto's Utilities for Paper servers. Classes, Activity Rewards, Loot Crates, the Music Selector, the Odd Button, World Cleanup, /unload and Lumberjack.
+softdepend: [Vault, Essentials, floodgate]
+description: Coberto's Utilities for Paper servers. Classes, Activity Rewards, Loot Crates, the Music Selector, the Odd Button, World Cleanup, /unload, Lumberjack and the Bedrock Menu.
 author: TheCoberto
 commands:
   class:
