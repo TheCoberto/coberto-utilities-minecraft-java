@@ -138,6 +138,8 @@ public final class PrankButton implements SpecialBlocks.Kind, TabExecutor {
 	// ---------- The block ----------
 
 	@Override public String id() { return "prank_button"; }
+
+	@Override public boolean adminOnly() { return true; }
 	@Override public String name() { return "Prank Button"; }
 	@Override public NamedTextColor color() { return NamedTextColor.RED; }
 	@Override public String lore() { return "Whoever pushes it gets pranked. Sneak and use it to set it up."; }

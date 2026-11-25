@@ -17,7 +17,7 @@ Players have no mods, so the Fabric mod's new blocks are vanilla blocks placed f
 | `music_selector` | Jukebox |
 | `prank_button` | Crimson button |
 
-Change the looks under `blocks` in `config.yml`. Special blocks can't be blown up or moved by pistons. Breaking a Music Selector or Prank Button gives the item back; breaking a crate gives nothing.
+Change the looks under `blocks` in `config.yml`. Special blocks can't be blown up or moved by pistons. Breaking a Music Selector gives the item back; breaking a crate gives nothing. Only admins (`cobertoutilities.admin`) can break a Prank Button or the block it hangs on, so players who find one out in the world can't take it; water and lava can't wash it away either.
 
 ## Classes
 Players get one of 15 classes, the same as in the Fabric mod and the Bedrock add-on: Warrior, Acrobat, Ghoul, Pyro, Aquarian, Glider, Paladin, Sentinel, Miner, Tank, Plaguebearer, Bard, Druid, Necromancer and Vampire. One class at a time; it's saved on the player and kept through logging out and dying.
@@ -40,7 +40,7 @@ Hide crates around the map for events. Using one pops out random loot and the cr
 Players use it to pay and queue a song. It plays like a jukebox, heard only nearby, with a floating "Now Playing" label. Each selector has its own queue; each player waits 2:30 between songs. Operators get Settings, Skip and Stop in the menu, or use `/music` (price, per-song prices, cooldown, queue size, which songs can be queued, and an autoplay loop) and `/musicskip`. The songs are the vanilla music discs.
 
 ## Prank Button
-Whoever pushes it gets pranked: an anvil shower, a launch into the sky, lightning, a cobweb trap, a killer chicken swarm, fake TNT, a teleport, a scrambled hotbar, spooky darkness, or a random one. The player who placed it (or an operator) sneaks and uses it with an empty hand to change the sign, the prank and its settings in clickable chat, or uses `/prankbutton <x y z> <setting> <value>`.
+Whoever pushes it gets pranked: an anvil shower (the anvils vanish after 15 seconds), a launch into the sky, lightning, a cobweb trap, a killer chicken swarm, fake TNT, a teleport, a scrambled hotbar, spooky darkness, or a random one. The player who placed it (or an operator) sneaks and uses it with an empty hand to change the sign, the prank and its settings in clickable chat, or uses `/prankbutton <x y z> <setting> <value>`. Nothing a prank leaves behind drops anything (killer chickens, their eggs, anvils, cobwebs), so a Prank Button can't be farmed.
 
 ## World Cleanup
 `/cleanup` clears hostile mobs (zombies, skeletons, creepers, spiders, endermen, slimes, witches, pillagers and more), arrows, XP orbs and dropped items in every world, to cut lag. Everyone sees `[Server] Clearing entities...` and then `[Server] MOBs & dropped items cleared!`. Name-tagged mobs and Citizens NPCs are left alone, and cleared mobs drop nothing. Works from command blocks and the console too, like the World Cleanup mod.
