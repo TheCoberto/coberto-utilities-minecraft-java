@@ -3,7 +3,7 @@ version: '${version}'
 main: com.thecoberto.utilities.CobertoUtilities
 api-version: '1.21'
 softdepend: [Vault, Essentials]
-description: Coberto's Utilities for Paper servers. Classes, Activity Rewards, Loot Crates, the Music Selector, the Odd Button, World Cleanup and /unload.
+description: Coberto's Utilities for Paper servers. Classes, Activity Rewards, Loot Crates, the Music Selector, the Odd Button, World Cleanup, /unload and Lumberjack.
 author: TheCoberto
 commands:
   class:
@@ -65,7 +65,15 @@ commands:
     description: Empty your inventory into nearby chests (not your hotbar or armor)
     usage: /dump
     permission: cobertoutilities.unload
+  lumberjack:
+    description: Turn Lumberjack (chop a whole tree at once) on or off
+    usage: /lumberjack [on|off]
+    aliases: [lj, treefeller]
+    permission: cobertoutilities.lumberjack
 permissions:
+  cobertoutilities.lumberjack:
+    description: Use /lumberjack and fell whole trees
+    default: true
   cobertoutilities.unload:
     description: Use /unload and /dump
     default: true
