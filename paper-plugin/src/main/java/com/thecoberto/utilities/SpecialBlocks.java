@@ -11,6 +11,9 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.Directional;
+import org.bukkit.block.data.FaceAttachable;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -19,6 +22,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -69,7 +73,18 @@ public final class SpecialBlocks implements Listener {
 		default boolean dropsItem() {
 			return true;
 		}
+
+		/**
+		 * Only admins can break it or the block it hangs on, so players who find one out in the
+		 * world can't pick it up. Building and mining around it still works.
+		 */
+		default boolean adminOnly() {
+			return false;
+		}
 	}
+
+	public static final String ADMIN = "cobertoutilities.admin";
+	private static final BlockFace[] SIDES = {BlockFace.UP, BlockFace.DOWN, BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST};
 
 	private final JavaPlugin plugin;
 	private final NamespacedKey itemKey;
@@ -209,6 +224,41 @@ public final class SpecialBlocks implements Listener {
 		if (kind.dropsItem()) block.getWorld().dropItemNaturally(block.getLocation().add(0.5, 0.5, 0.5), item(kind, 1));
 	}
 
+	/** The block an attached special block (a button, say) hangs on, or null if it isn't attached. */
+	private static Block support(Block block) {
+		if (!(block.getBlockData() instanceof FaceAttachable attachable)) return null;
+		return switch (attachable.getAttachedFace()) {
+			case FLOOR -> block.getRelative(BlockFace.DOWN);
+			case CEILING -> block.getRelative(BlockFace.UP);
+			case WALL -> block.getBlockData() instanceof Directional d ? block.getRelative(d.getFacing().getOppositeFace()) : null;
+		};
+	}
+
+	/** Whether this block is an admin-only special block, or holds one up. */
+	private boolean guarded(Block block) {
+		Kind kind = kindAt(block);
+		if (kind != null && kind.adminOnly()) return true;
+		for (BlockFace side : SIDES) {
+			Block next = block.getRelative(side);
+			Kind k = kindAt(next);
+			if (k != null && k.adminOnly() && block.equals(support(next))) return true;
+		}
+		return false;
+	}
+
+	@EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+	public void onGuardedBreak(BlockBreakEvent event) {
+		if (event.getPlayer().hasPermission(ADMIN) || !guarded(event.getBlock())) return;
+		event.setCancelled(true);
+		event.getPlayer().sendActionBar(Component.text("This can't be broken.", NamedTextColor.RED));
+	}
+
+	/** Water and lava would wash a button away. */
+	@EventHandler(ignoreCancelled = true)
+	public void onFlow(BlockFromToEvent event) {
+		if (guarded(event.getToBlock())) event.setCancelled(true);
+	}
+
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void onBreak(BlockBreakEvent event) {
 		Kind kind = kindAt(event.getBlock());
@@ -224,28 +274,30 @@ public final class SpecialBlocks implements Listener {
 		Kind kind = kindAt(event.getBlock());
 		if (kind == null) return;
 		event.setWillDrop(false);
-		dropItem(kind, event.getBlock());
+		// An admin-only block knocked off its wall some way not covered above is just gone,
+		// so its item never lies on the ground for a player to pick up.
+		if (!kind.adminOnly()) dropItem(kind, event.getBlock());
 		forget(event.getBlock(), kind);
 	}
 
 	@EventHandler(ignoreCancelled = true)
 	public void onEntityExplode(EntityExplodeEvent event) {
-		event.blockList().removeIf(b -> kindAt(b) != null);
+		event.blockList().removeIf(b -> kindAt(b) != null || guarded(b));
 	}
 
 	@EventHandler(ignoreCancelled = true)
 	public void onBlockExplode(BlockExplodeEvent event) {
-		event.blockList().removeIf(b -> kindAt(b) != null);
+		event.blockList().removeIf(b -> kindAt(b) != null || guarded(b));
 	}
 
 	@EventHandler(ignoreCancelled = true)
 	public void onPistonExtend(BlockPistonExtendEvent event) {
-		if (event.getBlocks().stream().anyMatch(b -> kindAt(b) != null)) event.setCancelled(true);
+		if (event.getBlocks().stream().anyMatch(b -> kindAt(b) != null || guarded(b))) event.setCancelled(true);
 	}
 
 	@EventHandler(ignoreCancelled = true)
 	public void onPistonRetract(BlockPistonRetractEvent event) {
-		if (event.getBlocks().stream().anyMatch(b -> kindAt(b) != null)) event.setCancelled(true);
+		if (event.getBlocks().stream().anyMatch(b -> kindAt(b) != null || guarded(b))) event.setCancelled(true);
 	}
 
 	public static Location center(Block block) {

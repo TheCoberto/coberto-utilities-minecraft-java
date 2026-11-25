@@ -17,6 +17,11 @@ import org.bukkit.block.Block;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
 import org.bukkit.entity.Chicken;
+import org.bukkit.entity.Entity;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityBreedEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityDropItemEvent;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -54,10 +59,14 @@ final class Pranks implements Listener {
 	static final Map<String, String> PECKS = new LinkedHashMap<>();
 	private static final Map<String, Float> PECK_DAMAGE = Map.of("light", 2f, "medium", 4f, "brutal", 8f, "deadly", 16f);
 	static final String CHICKEN_TAG = "coberto_killer_chicken";
-	private static final int ANVIL_SECONDS = 30; // anvils from the shower disappear after this
+	private static final int ANVIL_SECONDS = 15; // anvils from the shower disappear after this
 
 	private static JavaPlugin plugin;
 	private static final Set<UUID> activeChickens = new HashSet<>();
+	/** Anvil showers whose anvils haven't been cleared yet. */
+	private static final List<AnvilArea> anvilAreas = new ArrayList<>();
+	/** Cobwebs from the cobweb trap, by position. */
+	private static final Set<String> cobwebs = new HashSet<>();
 
 	private static void add(String id, String name, BiConsumer<Player, PrankButton.Setup> run) {
 		ALL.put(id, new Prank(id, name, run));
@@ -72,7 +81,10 @@ final class Pranks implements Listener {
 		add("cobweb", "Cobweb trap", (p, b) -> {
 			Block feet = p.getLocation().getBlock();
 			for (Block block : List.of(feet, feet.getRelative(0, 1, 0))) {
-				if (block.getType().isAir()) block.setType(Material.COBWEB);
+				if (block.getType().isAir()) {
+					block.setType(Material.COBWEB);
+					cobwebs.add(pos(block));
+				}
 			}
 			p.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 100, 2, false, false, true));
 		});
@@ -176,7 +188,13 @@ final class Pranks implements Listener {
 		freeze(player, landTicks + 10);
 		if (setup.anvilsKill) squashWhenHit(player, landTicks);
 		int height = highest;
-		later(ANVIL_SECONDS * 20, () -> clearAnvils(base, height));
+		AnvilArea area = new AnvilArea(base.getWorld().getUID(), base.getX() - 1, base.getY() - 16, base.getZ() - 1,
+				base.getX() + 1, base.getY() + height, base.getZ() + 1);
+		anvilAreas.add(area);
+		later(ANVIL_SECONDS * 20, () -> {
+			clearAnvils(base, height);
+			anvilAreas.remove(area);
+		});
 	}
 
 	/** Ticks a falling block takes to fall this many blocks (speeds up 0.04 a tick, 2% drag). */
@@ -278,6 +296,58 @@ final class Pranks implements Listener {
 			player.teleport(to);
 			world.playSound(to, Sound.ENTITY_ENDERMAN_TELEPORT, SoundCategory.PLAYERS, 1f, 1f);
 			return;
+		}
+	}
+
+	// ---------- Nothing to farm ----------
+	// Prank leftovers (chickens, anvils, cobwebs) drop nothing, so a Prank Button can't be farmed.
+
+	/** Where an anvil shower's anvils can be, until they're cleared. */
+	private record AnvilArea(UUID world, int x1, int y1, int z1, int x2, int y2, int z2) {
+		boolean contains(Block b) {
+			return b.getWorld().getUID().equals(world) && b.getX() >= x1 && b.getX() <= x2
+					&& b.getY() >= y1 && b.getY() <= y2 && b.getZ() >= z1 && b.getZ() <= z2;
+		}
+	}
+
+	private static String pos(Block b) {
+		return b.getWorld().getUID() + "," + b.getX() + "," + b.getY() + "," + b.getZ();
+	}
+
+	private static boolean inAnvilShower(Block b) {
+		return anvilAreas.stream().anyMatch(a -> a.contains(b));
+	}
+
+	@EventHandler(ignoreCancelled = true)
+	public void onPrankBlockBreak(BlockBreakEvent event) {
+		Block b = event.getBlock();
+		boolean prankAnvil = Tag.ANVIL.isTagged(b.getType()) && inAnvilShower(b);
+		if (prankAnvil || (b.getType() == Material.COBWEB && cobwebs.remove(pos(b)))) {
+			event.setDropItems(false);
+			event.setExpToDrop(0);
+		}
+	}
+
+	/** Eggs from killer chickens, and prank anvils that break or can't land and would drop as items. */
+	@EventHandler(ignoreCancelled = true)
+	public void onDropItem(EntityDropItemEvent event) {
+		Entity e = event.getEntity();
+		if (e.getScoreboardTags().contains(CHICKEN_TAG) || (e instanceof FallingBlock && inAnvilShower(e.getLocation().getBlock()))) {
+			event.setCancelled(true);
+		}
+	}
+
+	@EventHandler
+	public void onChickenDeath(EntityDeathEvent event) {
+		if (!event.getEntity().getScoreboardTags().contains(CHICKEN_TAG)) return;
+		event.getDrops().clear();
+		event.setDroppedExp(0);
+	}
+
+	@EventHandler(ignoreCancelled = true)
+	public void onChickenBreed(EntityBreedEvent event) {
+		if (event.getMother().getScoreboardTags().contains(CHICKEN_TAG) || event.getFather().getScoreboardTags().contains(CHICKEN_TAG)) {
+			event.setCancelled(true);
 		}
 	}
 
