@@ -2,6 +2,9 @@
 
 Fabric mod versions (0.x) and the Paper plugin (`paper-plugin/`, "Paper x.y") are listed together, newest first.
 
+## Paper 1.6.0
+- **Lumberjack**: chop a tree with an axe and the whole tree comes down. Each log is broken as if you broke it (claims and regions respected, normal drops, the axe wears per log and stops one hit before breaking). Sneak to chop one log; `/lumberjack` (or `/lj`) turns it on or off for you. Only natural trees: logs players placed are never chained, so log builds are safe.
+
 ## Paper 1.5.3
 - The Prank Button is called the **Odd Button** everywhere players see it (item name, chat prefix, setup menu), so pushing one stays a surprise.
 
