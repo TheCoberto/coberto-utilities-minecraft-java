@@ -3,7 +3,7 @@ version: '${version}'
 main: com.thecoberto.utilities.CobertoUtilities
 api-version: '1.21'
 softdepend: [Vault, Essentials]
-description: Coberto's Utilities for Paper servers. Classes, Activity Rewards, Loot Crates, the Music Selector, the Prank Button, World Cleanup and /unload.
+description: Coberto's Utilities for Paper servers. Classes, Activity Rewards, Loot Crates, the Music Selector, the Odd Button, World Cleanup and /unload.
 author: TheCoberto
 commands:
   class:
@@ -15,7 +15,7 @@ commands:
     usage: /setclass <players> <class|none>
     permission: cobertoutilities.classes.admin
   utilitiesgive:
-    description: Give a Crate, Music Selector or Prank Button
+    description: Give a Crate, Music Selector or Odd Button
     usage: /utilitiesgive <crate|spooky_crate|holiday_crate|music_selector|prank_button> [player] [amount]
     permission: cobertoutilities.admin
   activity:
@@ -51,7 +51,7 @@ commands:
     usage: /cleanup
     permission: cobertoutilities.admin
   prankbutton:
-    description: Change a Prank Button (its owner or an operator)
+    description: Change an Odd Button (its owner or an operator)
     usage: /prankbutton <x> <y> <z> [setting] [value]
   areatitle:
     description: Titles that show when players walk into an area
@@ -70,7 +70,7 @@ permissions:
     description: Use /unload and /dump
     default: true
   cobertoutilities.admin:
-    description: Give special blocks and change Activity Rewards, crates, music and any Prank Button
+    description: Give special blocks and change Activity Rewards, crates, music and any Odd Button
     default: op
   cobertoutilities.classes.admin:
     description: Use /class and /setclass
