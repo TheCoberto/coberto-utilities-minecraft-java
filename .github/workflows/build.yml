@@ -27,7 +27,8 @@ jobs:
         with:
           name: jar
           path: build/libs/*.jar
-      - if: github.event_name == 'release'
+      # Paper releases (paper-v* tags) carry the Paper plugin jar, not the Fabric mod.
+      - if: github.event_name == 'release' && !startsWith(github.event.release.tag_name, 'paper-')
         run: gh release upload "${{ github.event.release.tag_name }}" build/libs/*.jar --clobber
         env:
           GH_TOKEN: ${{ github.token }}
