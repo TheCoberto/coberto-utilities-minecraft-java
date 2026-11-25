@@ -2,6 +2,9 @@
 
 Fabric mod versions (0.x) and the Paper plugin (`paper-plugin/`, "Paper x.y") are listed together, newest first.
 
+## Paper 1.7.0
+- **Bedrock Menu**: Bedrock players right-click a compass to open a Bedrock menu with a button for each handy command (What's New, Spawn, Home, Balance, PvP, Unload, Dump, Chest Sorting, Lumberjack, Slots). The buttons, their pictures and the title are set in `config.yml` (`bedrock_menu`). Needs Floodgate; Java players and lodestone linking are unaffected.
+
 ## Paper 1.6.0
 - **Lumberjack**: chop a tree with an axe and the whole tree comes down. Each log is broken as if you broke it (claims and regions respected, normal drops, the axe wears per log and stops one hit before breaking). Sneak to chop one log; `/lumberjack` (or `/lj`) turns it on or off for you. Only natural trees: logs players placed are never chained, so log builds are safe.
 
