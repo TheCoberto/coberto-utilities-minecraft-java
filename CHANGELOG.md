@@ -2,6 +2,9 @@
 
 Fabric mod versions (0.x) and the Paper plugin (`paper-plugin/`, "Paper x.y") are listed together, newest first.
 
+## Paper 1.7.1
+- Chest sorting (Chestsort+) no longer scrambles plugin menus (server menus, shops, the Bedrock Menu and other GUIs) when they open. Real chests, barrels, shulker boxes, ender chests, minecarts and pack animals still sort.
+
 ## Paper 1.7.0
 - **Bedrock Menu**: Bedrock players right-click a compass to open a Bedrock menu with a button for each handy command (What's New, Spawn, Home, Balance, PvP, Unload, Dump, Chest Sorting, Lumberjack, Slots). The buttons, their pictures and the title are set in `config.yml` (`bedrock_menu`). Needs Floodgate; Java players and lodestone linking are unaffected.
 
