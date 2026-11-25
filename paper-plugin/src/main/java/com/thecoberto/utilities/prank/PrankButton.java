@@ -193,7 +193,7 @@ public final class PrankButton implements SpecialBlocks.Kind, TabExecutor {
 	// ---------- Setup (/prankbutton) ----------
 
 	static Component prefix() {
-		return Msg.prefix("Prank:", NamedTextColor.RED);
+		return Msg.prefix("Odd Button:", NamedTextColor.RED);
 	}
 
 	private static List<String> prankChoices() {
