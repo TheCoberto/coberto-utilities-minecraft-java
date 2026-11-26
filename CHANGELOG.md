@@ -2,6 +2,12 @@
 
 Fabric mod versions (0.x) and the Paper plugin (`paper-plugin/`, "Paper x.y") are listed together, newest first.
 
+## Paper 1.12.0
+- **Leaderboard** (new): a Discord channel with one message that keeps itself up to date, showing the top 5 players in 💰 Richest, ⚔️ Player Kills, 🎯 Best KDR, 💀 Most Deaths, 🏡 Claim Blocks, ⏱️ Playtime, 🧟 Mob Kills, 🏃 Distance Traveled and 🎣 Fish Caught, with server totals on top. Counts offline players too.
+- Optional thread that announces every new #1 ("👑 X took #1 in Richest from Y").
+- Players need 30 minutes of playtime to be ranked; staff can be hidden. Categories can be turned off.
+- Admin: `/leaderboard status|refresh|repost|reload|webhook <url>`; settings in `leaderboard.yml`.
+
 ## Paper 1.11.0
 - **Market Board** (new): the shop's Discord channel, replacing the shop-updates and shop-transactions channels.
   - A board message that keeps itself up to date: today's trades and totals, most bought and sold items, top traders, and prices dynamic pricing has pushed down or up.
