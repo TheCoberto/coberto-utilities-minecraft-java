@@ -45,8 +45,13 @@ Whoever pushes it gets pranked: an anvil shower (the anvils vanish after 15 seco
 ## World Cleanup
 `/cleanup` clears hostile mobs (zombies, skeletons, creepers, spiders, endermen, slimes, witches, pillagers and more), arrows, XP orbs and dropped items in every world, to cut lag. Everyone sees `[Server] Clearing entities...` and then `[Server] MOBs & dropped items cleared!`. Name-tagged mobs and Citizens NPCs are left alone, and cleared mobs drop nothing. Works from command blocks and the console too, like the World Cleanup mod.
 
+## Kingdom Board (Discord)
+Two Discord messages, one for **Factions** and one for **Clans**, that a webhook keeps editing in place, so the channel always shows the current standings. Factions come from the LuckPerms `faction` meta (or the faction's groups); clans from SimpleClans (name, leaders, members, kills, deaths, KDR, bank, allies, rivals, founding date). It checks every 2 minutes and only contacts Discord when something changed. With a thread set, it also posts what changed: faction joins and switches, new and disbanded clans, members joining and leaving, new leaders, alliances and rivalries.
+
+Setup: make a webhook for the channel, run `/kingdomboard webhook <url>` in the console (stored in `kingdom-board-data.yml`, kept out of `kingdom-board.yml` because it's a secret), and pin the two messages. Settings, factions and the events thread are in `kingdom-board.yml`. `/kingdomboard status|refresh|repost|reload` (admin).
+
 ## Permissions
-`cobertoutilities.admin` (op by default) for `/utilitiesgive`, `/activity*`, `/crates`, `/music`, `/musicskip`, `/cleanup` and changing any Prank Button. `cobertoutilities.classes.admin` (op by default) for `/class` and `/setclass`.
+`cobertoutilities.admin` (op by default) for `/utilitiesgive`, `/activity*`, `/crates`, `/music`, `/musicskip`, `/cleanup`, `/kingdomboard` and changing any Prank Button. `cobertoutilities.classes.admin` (op by default) for `/class` and `/setclass`.
 
 If another plugin uses the same command name, use the `cobertoutilities:` prefix, like `/cobertoutilities:crates`.
 
