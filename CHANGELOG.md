@@ -2,6 +2,9 @@
 
 Fabric mod versions (0.x) and the Paper plugin (`paper-plugin/`, "Paper x.y") are listed together, newest first.
 
+## Paper 1.9.0
+- **Compass Menu on Java**: Java players can now right-click a compass too, and get a chest menu with the same buttons as the Bedrock form (each button has a Java `item:` icon in `config.yml`). Players who can use WorldEdit's compass wand (operators) sneak + right-click for the menu, so the wand still works. Lodestone linking is unaffected.
+
 ## Paper 1.8.0
 - **Classes are open to everyone**: `/class` opens the class menu for all players (Bedrock players get a native form). After picking, you wait **5 minutes** before changing again (your first pick is free; operators don't wait). `/setclass` stays operator-only.
 - **Bedrock Menu**: new **Pick a Class** button.
