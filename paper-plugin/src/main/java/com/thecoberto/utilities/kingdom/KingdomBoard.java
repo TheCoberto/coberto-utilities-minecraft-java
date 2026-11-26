@@ -144,9 +144,17 @@ public final class KingdomBoard implements TabExecutor {
 		}
 
 		if (last != null && settings.getBoolean("events.enabled", true)) {
-			List<String> events = events(last, now);
-			String thread = settings.getString("events.thread-id", "");
-			if (!events.isEmpty() && thread != null && !thread.isBlank()) postEvents(webhook, thread, events);
+			String factionThread = thread("factions"), clanThread = thread("clans");
+			List<String> factionEvents = factionThread.isBlank() ? List.of() : factionEvents(last, now);
+			List<String> clanEvents = clanThread.isBlank() ? List.of() : clanEvents(last, now);
+			if (factionThread.equals(clanThread)) {
+				List<String> all = new ArrayList<>(factionEvents);
+				all.addAll(clanEvents);
+				if (!all.isEmpty()) postEvents(webhook, factionThread, all);
+			} else {
+				if (!factionEvents.isEmpty()) postEvents(webhook, factionThread, factionEvents);
+				if (!clanEvents.isEmpty()) postEvents(webhook, clanThread, clanEvents);
+			}
 		}
 		last = now;
 		if (factionsSent && clansSent) lastProblem = null;
@@ -330,14 +338,22 @@ public final class KingdomBoard implements TabExecutor {
 
 	// ---------------------------------------------------------------- events
 
-	/** What happened between two snapshots, as short lines for the events thread. */
-	private List<String> events(Snapshot before, Snapshot now) {
-		List<String> out = new ArrayList<>();
+	/**
+	 * The thread for "factions" or "clans" events: its own events.<kind>-thread-id, or else the shared
+	 * events.thread-id. Blank when that kind is off or has nowhere to go.
+	 */
+	private String thread(String kind) {
 		ConfigurationSection on = settings.getConfigurationSection("events");
-		boolean factionEvents = on == null || on.getBoolean("factions", true);
-		boolean clanEvents = on == null || on.getBoolean("clans", true);
+		if (on == null || !on.getBoolean(kind, true)) return "";
+		String own = on.getString(kind + "-thread-id", "");
+		String id = own == null || own.isBlank() ? on.getString("thread-id", "") : own;
+		return id == null ? "" : id.trim();
+	}
 
-		if (factionEvents) {
+	/** Faction joins, switches and leaves between two snapshots. */
+	private List<String> factionEvents(Snapshot before, Snapshot now) {
+		List<String> out = new ArrayList<>();
+		{
 			Set<UUID> everyone = new HashSet<>(before.factionOf().keySet());
 			everyone.addAll(now.factionOf().keySet());
 			for (UUID uuid : everyone) {
@@ -351,8 +367,13 @@ public final class KingdomBoard implements TabExecutor {
 				else if (from != null) out.add("🏳️ " + who + " left the " + from.name());
 			}
 		}
+		return out;
+	}
 
-		if (clanEvents) {
+	/** New and disbanded clans, members, leaders, alliances and rivalries between two snapshots. */
+	private List<String> clanEvents(Snapshot before, Snapshot now) {
+		List<String> out = new ArrayList<>();
+		{
 			for (Snapshot.Clan c : now.clans()) {
 				Snapshot.Clan old = before.clan(c.tag());
 				String label = "**[" + c.tag() + "] " + escape(c.name()) + "**";
@@ -491,7 +512,8 @@ public final class KingdomBoard implements TabExecutor {
 				sender.sendMessage(Component.text("Webhook: " + (hooked ? "set" : "not set")
 						+ " · SimpleClans: " + (ClanReader.available() ? "found" : "missing")
 						+ " · LuckPerms: " + (Bukkit.getPluginManager().isPluginEnabled("LuckPerms") ? "found" : "missing")
-						+ " · Events thread: " + (settings.getString("events.thread-id", "").isBlank() ? "none" : "set"), NamedTextColor.GRAY));
+						+ " · Faction events: " + (thread("factions").isBlank() ? "off" : "on")
+						+ " · Clan events: " + (thread("clans").isBlank() ? "off" : thread("clans").equals(thread("factions")) ? "on (same thread)" : "on"), NamedTextColor.GRAY));
 				if (lastProblem != null) Msg.error(sender, "Last problem: " + lastProblem);
 			}
 			default -> {

@@ -6,9 +6,9 @@
 #     Channel settings > Integrations > Webhooks > New Webhook > Copy Webhook URL.
 #  2. In the server console: /kingdomboard webhook <that URL>
 #     (It's saved in kingdom-board-data.yml, not here, so this file has no secrets.)
-#  3. Optional: make a thread in that channel for the event feed, copy its ID
-#     (right-click > Copy Thread ID, with Developer Mode on) into events.thread-id below,
-#     then /kingdomboard reload.
+#  3. Optional: make a thread in that channel for the event feed (or two: Faction Changes and
+#     Clan Changes), copy its ID (right-click > Copy Thread ID, with Developer Mode on) into
+#     events below, then /kingdomboard reload.
 #  4. Pin the two board messages.
 #
 # Commands (cobertoutilities.admin): /kingdomboard status|refresh|repost|reload|webhook <url>
@@ -44,10 +44,14 @@ factions:
     emoji: "🟢"
     groups: [verdant_syndicate]
 
+# The event feed: short lines like "Steve joined the Azure Order" posted to threads in the
+# webhook's channel, so the two boards stay at the top. Use one shared thread (thread-id),
+# or one thread each (factions-thread-id, clans-thread-id; these win over thread-id).
+# No thread set for a kind: those events aren't posted.
 events:
   enabled: true
-  # The thread (in the webhook's channel) that gets lines like "Steve joined the Azure Order".
-  # Empty: no event feed, just the two boards.
   thread-id: ""
+  factions-thread-id: ""
+  clans-thread-id: ""
   factions: true
   clans: true
