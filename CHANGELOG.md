@@ -2,6 +2,14 @@
 
 Fabric mod versions (0.x) and the Paper plugin (`paper-plugin/`, "Paper x.y") are listed together, newest first.
 
+## Paper 1.11.0
+- **Market Board** (new): the shop's Discord channel, replacing the shop-updates and shop-transactions channels.
+  - A board message that keeps itself up to date: today's trades and totals, most bought and sold items, top traders, and prices dynamic pricing has pushed down or up.
+  - **New in the Shop** posts by themselves when items are added, removed or repriced (on start and whenever the shop reloads, in-game editor included). `/market note <text>` puts your own words on top of the next one.
+  - `/market announce <text>` posts a Shop Announcement.
+  - Trade feed in a thread: every trade with the player's name, gathered into one message a minute, repeat trades of the same item merged.
+- Admin: `/market status|refresh|repost|reload|webhook <url>`; settings in `market-board.yml`.
+
 ## Paper 1.10.0
 - **Kingdom Board** (new): one Discord channel with a **Factions** message and a **Clans** message that update themselves in place, replacing the daily faction and clan posts. Factions show members (online ones in bold); clans show leaders, members, kills, deaths, KDR, bank, allies, rivals and founding date, biggest clan first.
 - Optional event feed in one shared thread, or separate Faction Changes and Clan Changes threads: faction joins and switches, new and disbanded clans, members joining and leaving, new leaders, alliances and rivalries.

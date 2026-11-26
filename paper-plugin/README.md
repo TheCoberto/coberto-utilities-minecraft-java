@@ -50,8 +50,13 @@ Two Discord messages, one for **Factions** and one for **Clans**, that a webhook
 
 Setup: make a webhook for the channel, run `/kingdomboard webhook <url>` in the console (stored in `kingdom-board-data.yml`, kept out of `kingdom-board.yml` because it's a secret), and pin the two messages. Settings, factions and the events thread are in `kingdom-board.yml`. `/kingdomboard status|refresh|repost|reload` (admin).
 
+## Market Board (Discord)
+The shop's Discord channel, for EconomyShopGUI. A board message a webhook keeps editing: today's trades and totals, most bought and sold items, top traders, and the items dynamic pricing has pushed down or up (compared with the prices in the shop files). **New in the Shop** posts go out by themselves when items are added, removed or repriced in the shop files (checked on start and whenever the shop reloads); `/market note <text>` adds your own words on top of the next one, and `/market announce <text>` posts a Shop Announcement. With a thread set, every trade goes to a feed there, gathered into one message a minute.
+
+Setup: make a webhook for the channel, run `/market webhook <url>` in the console (stored in `market-board-data.yml`), put the trade thread's ID in `market-board.yml`, and pin the board. EconomyShopGUI is read through its API by name, so it's optional at build and run time.
+
 ## Permissions
-`cobertoutilities.admin` (op by default) for `/utilitiesgive`, `/activity*`, `/crates`, `/music`, `/musicskip`, `/cleanup`, `/kingdomboard` and changing any Prank Button. `cobertoutilities.classes.admin` (op by default) for `/class` and `/setclass`.
+`cobertoutilities.admin` (op by default) for `/utilitiesgive`, `/activity*`, `/crates`, `/music`, `/musicskip`, `/cleanup`, `/kingdomboard`, `/market` and changing any Prank Button. `cobertoutilities.classes.admin` (op by default) for `/class` and `/setclass`.
 
 If another plugin uses the same command name, use the `cobertoutilities:` prefix, like `/cobertoutilities:crates`.
 
