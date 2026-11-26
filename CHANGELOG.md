@@ -2,6 +2,9 @@
 
 Fabric mod versions (0.x) and the Paper plugin (`paper-plugin/`, "Paper x.y") are listed together, newest first.
 
+## Paper 1.9.1
+- **Classes**: Vampire and Miner Night Vision no longer flickers. It stays steady while it applies and switches off cleanly at dawn (Vampire) or above Y 50 (Miner). Night Vision potions are left alone.
+
 ## Paper 1.9.0
 - **Compass Menu on Java**: Java players can now right-click a compass too, and get a chest menu with the same buttons as the Bedrock form (each button has a Java `item:` icon in `config.yml`). Players who can use WorldEdit's compass wand (operators) sneak + right-click for the menu, so the wand still works. Lodestone linking is unaffected.
 
