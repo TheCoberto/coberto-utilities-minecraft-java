@@ -1,4 +1,4 @@
-﻿# Changelog
+# Changelog
 
 Fabric mod versions (0.x) and the Paper plugin (`paper-plugin/`, "Paper x.y") are listed together, newest first.
 
