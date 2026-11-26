@@ -2,6 +2,7 @@ package com.thecoberto.utilities;
 
 import com.thecoberto.utilities.classes.Classes;
 import com.thecoberto.utilities.kingdom.KingdomBoard;
+import com.thecoberto.utilities.leaderboard.Leaderboard;
 import com.thecoberto.utilities.market.MarketBoard;
 import com.thecoberto.utilities.music.MusicSelector;
 import com.thecoberto.utilities.prank.PrankButton;
@@ -46,6 +47,7 @@ public final class CobertoUtilities extends JavaPlugin implements TabExecutor {
 		new BedrockMenu(this); // the compass menu: a form on Bedrock (needs Floodgate), a chest menu on Java
 		new KingdomBoard(this); // factions and clans on Discord, through a webhook
 		new MarketBoard(this); // the shop on Discord: board, trade feed, New in the Shop
+		new Leaderboard(this); // top players on Discord: money, kills, claims, playtime...
 
 		getCommand("utilitiesgive").setExecutor(this);
 		getCommand("utilitiesgive").setTabCompleter(this);

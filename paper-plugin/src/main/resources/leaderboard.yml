@@ -1,0 +1,53 @@
+# Leaderboard: a Discord channel with one message that keeps itself up to date, showing the
+# top players in each category (money, PvP kills, KDR, deaths, claim blocks, playtime, mob
+# kills, distance traveled, fish caught), plus server totals.
+# Optionally, a thread gets a post whenever someone takes #1 in a category.
+#
+# Setup:
+#  1. In Discord, make a channel (like #leaderboard). Channel settings > Integrations > Webhooks >
+#     New Webhook > Copy Webhook URL.
+#  2. In the server console: /leaderboard webhook <that URL>
+#     (Saved in leaderboard-data.yml, not here, so this file has no secrets.)
+#  3. Optional: make a thread in that channel (like "👑 New Leaders"), copy its ID
+#     (right-click > Copy Thread ID, with Developer Mode on) into new-leaders.thread-id below,
+#     then /leaderboard reload.
+#  4. Pin the Leaderboard message.
+#
+# Commands (cobertoutilities.admin): /leaderboard status | refresh | repost | reload | webhook <url>
+
+enabled: true
+
+# How often the board checks for changes. Discord is only contacted when something changed.
+refresh-seconds: 300
+
+webhook-name: "Kingdom Leaderboard"
+title: "🏆 Kingdom Leaderboard"
+color: 0xE67E22
+
+# How many players each category shows (1-10).
+top: 5
+
+# Players need at least this much playtime to be ranked (keeps out people who joined once).
+min-playtime-minutes: 30
+# Kept off the board (staff, test accounts). Names, any case.
+hidden-players: []
+
+# Best KDR only ranks players with at least this many player kills.
+kdr-min-kills: 5
+
+# Turn categories off with false. Richest needs an economy (Vault); Claim Blocks needs GriefPrevention.
+categories:
+  richest: true
+  kills: true
+  kdr: true
+  deaths: true
+  claim-blocks: true
+  playtime: true
+  mob-kills: true
+  distance: true
+  fish: true
+
+new-leaders:
+  enabled: true
+  # The thread (in the webhook's channel) for "👑 X took #1 in ..." posts. Empty: none.
+  thread-id: ""
