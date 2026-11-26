@@ -51,6 +51,8 @@ final class ClassMenu implements Listener {
 		Component title = current == null
 				? Component.text("Pick a class")
 				: Component.text("Class: ").append(Component.text(current.name(), current.color()));
+		long left = classes.cooldownLeft(player);
+		if (left > 0) title = title.append(Component.text(" (change in " + Classes.formatTime(left) + ")", NamedTextColor.DARK_GRAY));
 		Holder holder = new Holder();
 		Inventory inventory = Bukkit.createInventory(holder, 18, title);
 		holder.inventory = inventory;
@@ -103,7 +105,7 @@ final class ClassMenu implements Listener {
 		Bukkit.getScheduler().runTask(plugin, () -> {
 			if (!(player.getOpenInventory().getTopInventory().getHolder() instanceof Holder)) return; // double click
 			player.closeInventory();
-			if (classes.classOf(player) != picked) classes.setClass(player, picked);
+			classes.choose(player, picked);
 		});
 	}
 

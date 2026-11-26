@@ -27,9 +27,16 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import io.papermc.paper.event.entity.EntityKnockbackEvent;
+import org.bukkit.entity.Projectile;
+import org.bukkit.event.player.PlayerQuitEvent;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -44,10 +51,21 @@ public final class Classes implements Listener, TabExecutor {
 	private final NamespacedKey key;
 	private final Tag<EntityType> undead;
 	private ClassMenu menu;
+	private BedrockClassForm bedrockForm;
+	/** When each player last picked a class themselves (saved on the player, so relogging doesn't skip it). */
+	private final NamespacedKey changedKey;
+	/** When druids were last hurt, for their out-of-combat regeneration. */
+	private final Map<UUID, Long> lastHurt = new HashMap<>();
+
+	/** How long players wait between picking classes. Operators don't wait. */
+	static final long COOLDOWN_MS = 5 * 60 * 1000;
+	static final String BYPASS_PERMISSION = "cobertoutilities.classes.admin";
+	private static final long DRUID_CALM_MS = 5000;
 
 	public Classes(JavaPlugin plugin) {
 		this.plugin = plugin;
 		this.key = new NamespacedKey(plugin, "class");
+		this.changedKey = new NamespacedKey(plugin, "class_changed");
 		this.undead = Bukkit.getTag(Tag.REGISTRY_ENTITY_TYPES, NamespacedKey.minecraft("undead"), EntityType.class);
 	}
 
@@ -55,6 +73,7 @@ public final class Classes implements Listener, TabExecutor {
 		menu = new ClassMenu(this, plugin);
 		Bukkit.getPluginManager().registerEvents(this, plugin);
 		Bukkit.getPluginManager().registerEvents(menu, plugin);
+		if (Bukkit.getPluginManager().isPluginEnabled("floodgate")) bedrockForm = new BedrockClassForm(this, plugin);
 		plugin.getCommand("class").setExecutor(this);
 		plugin.getCommand("setclass").setExecutor(this);
 		plugin.getCommand("setclass").setTabCompleter(this);
@@ -86,6 +105,37 @@ public final class Classes implements Listener, TabExecutor {
 		applyEffects(player);
 	}
 
+	/** Milliseconds until this player can pick a class again (0 = now). */
+	long cooldownLeft(Player player) {
+		if (player.hasPermission(BYPASS_PERMISSION)) return 0;
+		Long last = player.getPersistentDataContainer().get(changedKey, PersistentDataType.LONG);
+		if (last == null) return 0; // their first pick is free
+		return Math.max(0, last + COOLDOWN_MS - System.currentTimeMillis());
+	}
+
+	static String formatTime(long ms) {
+		long seconds = (ms + 999) / 1000;
+		return seconds >= 60 ? (seconds / 60) + "m " + (seconds % 60) + "s" : seconds + "s";
+	}
+
+	/** A player picking from a menu: respects the cooldown. */
+	void choose(Player player, PlayerClass picked) {
+		if (classOf(player) == picked) return;
+		long left = cooldownLeft(player);
+		if (left > 0) {
+			player.sendMessage(prefix().append(Component.text("You can change your class again in " + formatTime(left) + ".", NamedTextColor.RED)));
+			return;
+		}
+		setClass(player, picked);
+		player.getPersistentDataContainer().set(changedKey, PersistentDataType.LONG, System.currentTimeMillis());
+	}
+
+	/** Opens the Bedrock form for Bedrock players, the chest menu for everyone else. */
+	void openMenu(Player player) {
+		if (bedrockForm != null && bedrockForm.isBedrock(player)) bedrockForm.open(player);
+		else menu.open(player);
+	}
+
 	static Component prefix() {
 		return Component.text("Classes:", NamedTextColor.GOLD).append(Component.text(" ", NamedTextColor.WHITE));
 	}
@@ -113,9 +163,15 @@ public final class Classes implements Listener, TabExecutor {
 			case "bard" -> {
 				for (Player ally : player.getWorld().getPlayers()) {
 					if (ally.getLocation().distanceSquared(player.getLocation()) > 64) continue;
-					give(ally, PlayerClass.e(PotionEffectType.REGENERATION, 1, PlayerClass.REGEN));
 					give(ally, PlayerClass.e(PotionEffectType.SPEED, 1, PlayerClass.SHORT));
+					// A support class: the bard heals others, not themselves.
+					if (ally != player) give(ally, PlayerClass.e(PotionEffectType.REGENERATION, 1, PlayerClass.REGEN));
 				}
+			}
+			case "druid" -> {
+				Long hurt = lastHurt.get(player.getUniqueId());
+				boolean calm = hurt == null || System.currentTimeMillis() - hurt >= DRUID_CALM_MS;
+				if (calm && PlayerClass.standingOnNature(player)) give(player, PlayerClass.e(PotionEffectType.REGENERATION, 1, PlayerClass.REGEN));
 			}
 			default -> {
 			}
@@ -138,18 +194,51 @@ public final class Classes implements Listener, TabExecutor {
 				|| event.getCause() == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK;
 	}
 
+	/** Druids remember when they were hurt. */
+	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+	public void onHurt(EntityDamageEvent event) {
+		if (event.getEntity() instanceof Player player && isClass(player, "druid")) {
+			lastHurt.put(player.getUniqueId(), System.currentTimeMillis());
+		}
+	}
+
+	@EventHandler
+	public void onQuit(PlayerQuitEvent event) {
+		lastHurt.remove(event.getPlayer().getUniqueId());
+	}
+
+	/** Paladins take 25% less damage from undead (melee or their arrows). */
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onUndeadHit(EntityDamageByEntityEvent event) {
+		if (!(event.getEntity() instanceof Player player) || !isClass(player, "paladin") || undead == null) return;
+		Entity source = event.getDamager();
+		if (source instanceof Projectile projectile && projectile.getShooter() instanceof Entity shooter) source = shooter;
+		if (undead.isTagged(source.getType())) event.setDamage(event.getDamage() * 0.75);
+	}
+
+	/** Tanks take half knockback. */
+	@EventHandler(ignoreCancelled = true)
+	public void onKnockback(EntityKnockbackEvent event) {
+		if (event.getEntity() instanceof Player player && isClass(player, "tank")) {
+			event.setKnockback(event.getKnockback().multiply(0.5));
+		}
+	}
+
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void onHit(EntityDamageByEntityEvent event) {
 		if (!isMelee(event) || !(event.getEntity() instanceof LivingEntity target)) return;
 		if (target instanceof HumanEntity human && human.isBlocking()) return; // blocked with a shield
 		Entity damager = event.getDamager();
+		// Abilities need a charged, direct hit: no spam-clicking, no sweeping several targets.
+		boolean charged = damager instanceof Player p && event.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK
+				&& p.getAttackCooldown() >= 0.9f;
 		// After the hit lands, like the Fabric mod's after-damage event.
 		Bukkit.getScheduler().runTask(plugin, () -> {
 			if (!target.isValid() || target.isDead()) return;
-			if (damager instanceof Player attacker) onMelee(attacker, target);
+			if (charged && damager instanceof Player attacker) onMelee(attacker, target);
 			if (target instanceof Player sentinel && isClass(sentinel, "sentinel") && damager instanceof LivingEntity attacker
 					&& attacker != sentinel && attacker.isValid() && !attacker.isDead()) {
-				attacker.damage(2, DamageSource.builder(DamageType.THORNS).withCausingEntity(sentinel).withDirectEntity(sentinel).build());
+				attacker.damage(1, DamageSource.builder(DamageType.THORNS).withCausingEntity(sentinel).withDirectEntity(sentinel).build());
 			}
 		});
 	}
@@ -160,7 +249,7 @@ public final class Classes implements Listener, TabExecutor {
 		if (c == null) return;
 		switch (c.id()) {
 			case "pyro" -> {
-				if (!attacker.getInventory().getItemInOffHand().isEmpty()) target.setFireTicks(Math.max(target.getFireTicks(), 80));
+				if (!attacker.getInventory().getItemInOffHand().isEmpty()) target.setFireTicks(Math.max(target.getFireTicks(), 60));
 			}
 			case "paladin" -> {
 				if (undead != null && undead.isTagged(target.getType())) {
@@ -169,8 +258,8 @@ public final class Classes implements Listener, TabExecutor {
 					attacker.heal(2);
 				}
 			}
-			case "plaguebearer" -> target.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 80, 1));
-			case "necromancer" -> target.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 80, 0));
+			case "plaguebearer" -> target.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 60, 0));
+			case "necromancer" -> target.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 60, 0));
 			case "vampire" -> attacker.heal(1);
 			default -> {
 			}
@@ -182,7 +271,7 @@ public final class Classes implements Listener, TabExecutor {
 	public void onDeath(EntityDeathEvent event) {
 		Player killer = event.getEntity().getKiller();
 		if (killer != null && isClass(killer, "necromancer")) {
-			killer.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 600, 0, false, false, true));
+			killer.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 300, 0, false, false, true));
 		}
 	}
 
@@ -201,7 +290,7 @@ public final class Classes implements Listener, TabExecutor {
 				sender.sendMessage(Component.text("Only players can choose a class. Use /setclass for others.", NamedTextColor.RED));
 				return true;
 			}
-			menu.open(player);
+			openMenu(player);
 			return true;
 		}
 

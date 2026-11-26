@@ -32,6 +32,9 @@ bedrock_menu:
     - text: Peaceful or Fighter
       command: pvpmenu
       image: textures/items/diamond_sword
+    - text: Pick a Class
+      command: class
+      image: textures/items/nether_star
     - text: Unload into Chests
       command: unload
       image: textures/blocks/chest_front
