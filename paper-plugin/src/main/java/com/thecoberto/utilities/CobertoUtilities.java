@@ -41,8 +41,7 @@ public final class CobertoUtilities extends JavaPlugin implements TabExecutor {
 		new PlaceRefund(this);
 		new MenuSortGuard(this);
 		new Lumberjack(this);
-		if (getServer().getPluginManager().isPluginEnabled("floodgate")) new BedrockMenu(this);
-		else getLogger().info("Floodgate isn't installed, so the Bedrock Menu is off.");
+		new BedrockMenu(this); // the compass menu: a form on Bedrock (needs Floodgate), a chest menu on Java
 
 		getCommand("utilitiesgive").setExecutor(this);
 		getCommand("utilitiesgive").setTabCompleter(this);
