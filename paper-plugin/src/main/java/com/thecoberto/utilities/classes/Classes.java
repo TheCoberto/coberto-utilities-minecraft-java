@@ -156,7 +156,17 @@ public final class Classes implements Listener, TabExecutor {
 	private void applyEffects(Player player) {
 		PlayerClass c = classOf(player);
 		if (c == null || player.isDead()) return;
-		for (PlayerClass.Effect effect : c.effects().apply(player)) give(player, effect);
+		List<PlayerClass.Effect> effects = c.effects().apply(player);
+		for (PlayerClass.Effect effect : effects) give(player, effect);
+		// Situational Night Vision (Vampire at night, Miner underground) switches off as soon
+		// as it stops applying, instead of lingering and flickering out. A Night Vision
+		// potion lasts longer than the class's 30 seconds, so it's left alone.
+		if (effects.stream().noneMatch(e -> e.type() == PotionEffectType.NIGHT_VISION)) {
+			PotionEffect nv = player.getPotionEffect(PotionEffectType.NIGHT_VISION);
+			if (nv != null && !nv.isInfinite() && nv.getDuration() <= PlayerClass.LASTING && !nv.hasParticles()) {
+				player.removePotionEffect(PotionEffectType.NIGHT_VISION);
+			}
+		}
 		switch (c.id()) {
 			case "plaguebearer" -> player.removePotionEffect(PotionEffectType.POISON);
 			case "necromancer" -> player.removePotionEffect(PotionEffectType.WITHER);

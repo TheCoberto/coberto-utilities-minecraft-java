@@ -137,7 +137,7 @@ public record PlayerClass(String id, String name, NamedTextColor color, Material
 				p -> p.isSneaking() ? list(e(PotionEffectType.RESISTANCE, 2, SHORT)) : list());
 		add("miner", "Miner", NamedTextColor.DARK_GRAY, Material.IRON_PICKAXE, "Haste I. Below Y 50: Haste II and Night Vision.",
 				p -> {
-					if (p.getLocation().getY() < 50) return list(e(PotionEffectType.HASTE, 2, SHORT), e(PotionEffectType.NIGHT_VISION, 1, 300));
+					if (p.getLocation().getY() < 50) return list(e(PotionEffectType.HASTE, 2, SHORT), e(PotionEffectType.NIGHT_VISION));
 					return list(e(PotionEffectType.HASTE));
 				});
 		add("tank", "Tank", NamedTextColor.BLUE, Material.IRON_CHESTPLATE, "Resistance I and takes half knockback, but Slowness I.",
@@ -157,7 +157,7 @@ public record PlayerClass(String id, String name, NamedTextColor color, Material
 		add("vampire", "Vampire", NamedTextColor.DARK_RED, Material.REDSTONE,
 				"Charged melee hits heal you half a heart. At night: Night Vision and Speed I. In daylight under the open sky: Weakness I and Slowness I.",
 				p -> {
-					if (isNight(p)) return list(e(PotionEffectType.NIGHT_VISION, 1, 300), e(PotionEffectType.SPEED, 1, SHORT));
+					if (isNight(p)) return list(e(PotionEffectType.NIGHT_VISION), e(PotionEffectType.SPEED, 1, SHORT));
 					if (underOpenSky(p)) return list(e(PotionEffectType.WEAKNESS, 1, SHORT), e(PotionEffectType.SLOWNESS, 1, SHORT));
 					return list();
 				});
