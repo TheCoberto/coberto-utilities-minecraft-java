@@ -1,6 +1,8 @@
 package com.thecoberto.utilities.kingdom;
 
 import com.thecoberto.utilities.Msg;
+import com.thecoberto.utilities.discord.Json;
+import com.thecoberto.utilities.discord.Webhook;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;

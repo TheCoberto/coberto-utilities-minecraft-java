@@ -1,14 +1,14 @@
-package com.thecoberto.utilities.kingdom;
+package com.thecoberto.utilities.discord;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 /** Just enough JSON for Discord webhooks: writing maps and lists, and reading a message's id. */
-final class Json {
+public final class Json {
 	private Json() {}
 
-	static String write(Object value) {
+	public static String write(Object value) {
 		StringBuilder out = new StringBuilder();
 		write(out, value);
 		return out.toString();
@@ -59,7 +59,7 @@ final class Json {
 	}
 
 	/** The top-level "id" of a JSON object (a message's own id, not its author's or an embed's). */
-	static String topLevelId(String json) {
+	public static String topLevelId(String json) {
 		int depth = 0;
 		boolean inString = false;
 		for (int i = 0; i < json.length(); i++) {

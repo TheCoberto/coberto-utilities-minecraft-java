@@ -1,0 +1,54 @@
+# Market Board: the shop's Discord channel (needs EconomyShopGUI).
+#  - A board message that keeps itself up to date: today's trades, most bought and sold items,
+#    top traders, and prices that dynamic pricing has pushed down or up.
+#  - "New in the Shop" posts when items are added, removed or repriced in the shop files
+#    (checked on start and whenever the shop reloads, in-game editor included).
+#  - A feed of every trade in a thread, gathered into one message a minute at most.
+#
+# Setup:
+#  1. In Discord, make a channel (like #market). Channel settings > Integrations > Webhooks >
+#     New Webhook > Copy Webhook URL.
+#  2. In the server console: /market webhook <that URL>
+#     (Saved in market-board-data.yml, not here, so this file has no secrets.)
+#  3. Make a thread in that channel for trades (like "🧾 Transactions"), copy its ID
+#     (right-click > Copy Thread ID, with Developer Mode on) into transactions.thread-id
+#     below, then /market reload.
+#  4. Pin the board message.
+#
+# Commands (cobertoutilities.admin):
+#  /market status | refresh | repost | reload | webhook <url>
+#  /market note <text>      goes on top of the next New in the Shop post (/market note clear)
+#  /market announce <text>  posts a Shop Announcement now
+#  In notes and announcements, \n starts a new line and **bold** works.
+
+enabled: true
+
+# How often the board checks for changes. Discord is only contacted when something changed.
+refresh-seconds: 120
+
+webhook-name: "Kingdom Market"
+board-title: "🪙 Kingdom Market"
+board-color: 0xF1C40F
+announce-title: "📢 Shop Announcement"
+
+# How many items (and traders) each "today" list shows.
+top-items: 5
+show-top-traders: true
+
+# Prices dynamic pricing has moved away from the shop's normal prices.
+show-price-moves: true
+price-moves: 8
+# Smaller moves than this aren't listed.
+price-move-threshold-percent: 2
+
+shop-changes:
+  enabled: true
+  # Also post when an item's normal buy or sell price is changed.
+  price-changes: true
+
+transactions:
+  enabled: true
+  # The thread (in the webhook's channel) for the trade feed. Empty: no feed.
+  thread-id: ""
+  # Trades are gathered up and posted this often.
+  every-seconds: 60
