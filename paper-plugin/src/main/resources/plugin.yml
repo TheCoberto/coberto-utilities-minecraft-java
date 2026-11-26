@@ -9,7 +9,7 @@ commands:
   class:
     description: Choose your class from a menu
     usage: /class
-    permission: cobertoutilities.classes.admin
+    permission: cobertoutilities.classes
   setclass:
     description: Set players' class (none removes it)
     usage: /setclass <players> <class|none>
@@ -80,6 +80,9 @@ permissions:
   cobertoutilities.admin:
     description: Give special blocks and change Activity Rewards, crates, music and any Odd Button
     default: op
+  cobertoutilities.classes:
+    description: Pick a class with /class
+    default: true
   cobertoutilities.classes.admin:
-    description: Use /class and /setclass
+    description: Use /setclass and change class without waiting
     default: op

@@ -2,6 +2,17 @@
 
 Fabric mod versions (0.x) and the Paper plugin (`paper-plugin/`, "Paper x.y") are listed together, newest first.
 
+## Paper 1.8.0
+- **Classes are open to everyone**: `/class` opens the class menu for all players (Bedrock players get a native form). After picking, you wait **5 minutes** before changing again (your first pick is free; operators don't wait). `/setclass` stays operator-only.
+- **Bedrock Menu**: new **Pick a Class** button.
+- **Rebalanced classes** so none is too strong, especially in PvP:
+  - On-hit abilities (Pyro, Paladin, Plaguebearer, Necromancer, Vampire) only work on fully charged, direct hits, not spam-clicks or sweeps.
+  - Warrior: Strength I only (lost Haste). Acrobat: Speed I (was II). Ghoul: Strength I at night (was II), no more night Regeneration.
+  - Paladin: lost permanent Resistance; undead now hit them 25% softer. Sentinel: Resistance II while sneaking (was III), thorns 1 damage (was 2).
+  - Miner: Haste I, Haste II only below Y 50. Tank: Resistance I (was II) plus half knockback.
+  - Plaguebearer: Poison I for 3s (was Poison II for 4s). Necromancer: Wither 3s (was 4s), Absorption 15s (was 30s). Pyro: fire 3s (was 4s).
+  - Bard: Regeneration goes to nearby players only, not the bard. Druid: regenerates only after 5 seconds without being hurt. Vampire: lost Strength at night.
+
 ## Paper 1.7.2
 - **Bedrock Menu**: new **Hotbar Refill On/Off** (`/refill`) and **Best Tools On/Off** (`/bt`) buttons.
 

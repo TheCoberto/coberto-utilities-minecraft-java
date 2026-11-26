@@ -89,25 +89,27 @@ public record PlayerClass(String id, String name, NamedTextColor color, Material
 	}
 
 	static {
-		add("warrior", "Warrior", NamedTextColor.RED, Material.IRON_SWORD, "Strength I and Haste I.",
-				p -> list(e(PotionEffectType.STRENGTH), e(PotionEffectType.HASTE)));
-		add("acrobat", "Acrobat", NamedTextColor.GREEN, Material.RABBIT_FOOT, "Speed II and Jump Boost II. Never takes fall damage.",
-				p -> list(e(PotionEffectType.SPEED, 2), e(PotionEffectType.JUMP_BOOST, 2)));
+		// Balanced so each class has one main strength, and anything strong in PvP has
+		// a condition or a drawback. On-hit abilities only fire on charged hits (not
+		// sweeps), so spam-clicking doesn't stack them (see Classes).
+		add("warrior", "Warrior", NamedTextColor.RED, Material.IRON_SWORD, "Strength I. Simple: you hit harder.",
+				p -> list(e(PotionEffectType.STRENGTH)));
+		add("acrobat", "Acrobat", NamedTextColor.GREEN, Material.RABBIT_FOOT, "Speed I and Jump Boost II. Never takes fall damage.",
+				p -> list(e(PotionEffectType.SPEED), e(PotionEffectType.JUMP_BOOST, 2)));
 		add("ghoul", "Ghoul", NamedTextColor.DARK_GREEN, Material.ROTTEN_FLESH,
-				"Night Vision and Oozing. At night: Strength II, Speed I and Regeneration I. In daylight under the open sky: Weakness I.",
+				"Night Vision and Oozing. At night: Strength I and Speed I. In daylight under the open sky: Weakness I.",
 				p -> {
 					List<Effect> l = list(e(PotionEffectType.NIGHT_VISION), e(PotionEffectType.OOZING));
 					if (isNight(p)) {
-						l.add(e(PotionEffectType.STRENGTH, 2, SHORT));
+						l.add(e(PotionEffectType.STRENGTH, 1, SHORT));
 						l.add(e(PotionEffectType.SPEED, 1, SHORT));
-						l.add(e(PotionEffectType.REGENERATION, 1, REGEN));
 					} else if (underOpenSky(p)) {
 						l.add(e(PotionEffectType.WEAKNESS, 1, SHORT));
 					}
 					return l;
 				});
 		add("pyro", "Pyro", NamedTextColor.GOLD, Material.BLAZE_POWDER,
-				"Fire Resistance. With something in your off-hand, your melee hits set enemies on fire.",
+				"Fire Resistance. With something in your off-hand, charged melee hits set enemies on fire (3 seconds).",
 				p -> list(e(PotionEffectType.FIRE_RESISTANCE)));
 		add("aquarian", "Aquarian", NamedTextColor.AQUA, Material.HEART_OF_THE_SEA,
 				"Water Breathing. In water: Conduit Power and Dolphin's Grace.",
@@ -128,35 +130,34 @@ public record PlayerClass(String id, String name, NamedTextColor color, Material
 					return l;
 				});
 		add("paladin", "Paladin", NamedTextColor.YELLOW, Material.GOLDEN_SWORD,
-				"Resistance I. Melee hits on undead mobs deal 4 extra damage and heal you 1 heart.",
-				p -> list(e(PotionEffectType.RESISTANCE)));
+				"Undead hit you 25% softer. Charged melee hits on undead deal 4 extra damage and heal you 1 heart.",
+				p -> list());
 		add("sentinel", "Sentinel", NamedTextColor.GRAY, Material.SHIELD,
-				"Resistance III while sneaking. Anyone who hits you in melee takes 2 damage back.",
-				p -> p.isSneaking() ? list(e(PotionEffectType.RESISTANCE, 3, SHORT)) : list());
-		add("miner", "Miner", NamedTextColor.DARK_GRAY, Material.IRON_PICKAXE, "Haste II. Night Vision while below Y 50.",
+				"Resistance II while sneaking. Anyone who hits you in melee takes 1 damage back.",
+				p -> p.isSneaking() ? list(e(PotionEffectType.RESISTANCE, 2, SHORT)) : list());
+		add("miner", "Miner", NamedTextColor.DARK_GRAY, Material.IRON_PICKAXE, "Haste I. Below Y 50: Haste II and Night Vision.",
 				p -> {
-					List<Effect> l = list(e(PotionEffectType.HASTE, 2));
-					if (p.getLocation().getY() < 50) l.add(e(PotionEffectType.NIGHT_VISION, 1, 300));
-					return l;
+					if (p.getLocation().getY() < 50) return list(e(PotionEffectType.HASTE, 2, SHORT), e(PotionEffectType.NIGHT_VISION, 1, 300));
+					return list(e(PotionEffectType.HASTE));
 				});
-		add("tank", "Tank", NamedTextColor.BLUE, Material.IRON_CHESTPLATE, "Resistance II and Slowness I.",
-				p -> list(e(PotionEffectType.RESISTANCE, 2), e(PotionEffectType.SLOWNESS)));
+		add("tank", "Tank", NamedTextColor.BLUE, Material.IRON_CHESTPLATE, "Resistance I and takes half knockback, but Slowness I.",
+				p -> list(e(PotionEffectType.RESISTANCE), e(PotionEffectType.SLOWNESS)));
 		add("plaguebearer", "Plaguebearer", NamedTextColor.DARK_PURPLE, Material.SPIDER_EYE,
-				"Immune to Poison. Melee hits poison enemies (Poison II, 4 seconds).",
+				"Immune to Poison. Charged melee hits poison enemies (Poison I, 3 seconds).",
 				p -> list());
 		add("bard", "Bard", NamedTextColor.LIGHT_PURPLE, Material.NOTE_BLOCK,
-				"Hero of the Village (better trades). Gives Regeneration I and Speed I to you and every player within 8 blocks.",
+				"Hero of the Village (better trades). You and players within 8 blocks get Speed I; the others (not you) also get Regeneration I.",
 				p -> list(e(PotionEffectType.HERO_OF_THE_VILLAGE)));
 		add("druid", "Druid", NamedTextColor.GREEN, Material.OAK_SAPLING,
-				"Regeneration I while standing on grass, dirt, moss, logs or leaves.",
-				p -> standingOnNature(p) ? list(e(PotionEffectType.REGENERATION, 1, REGEN)) : list());
+				"Regeneration I while standing on grass, dirt, moss, logs or leaves, if you haven't been hurt in the last 5 seconds.",
+				p -> list()); // given in Classes, which knows when the druid was last hurt
 		add("necromancer", "Necromancer", NamedTextColor.DARK_GRAY, Material.WITHER_SKELETON_SKULL,
-				"Immune to Wither. Melee hits wither enemies (Wither I, 4 seconds). Killing a mob gives Absorption I for 30 seconds.",
+				"Immune to Wither. Charged melee hits wither enemies (Wither I, 3 seconds). Killing a mob gives Absorption I for 15 seconds.",
 				p -> list());
 		add("vampire", "Vampire", NamedTextColor.DARK_RED, Material.REDSTONE,
-				"Melee hits heal you half a heart. At night: Night Vision, Strength I and Speed I. In daylight under the open sky: Weakness I and Slowness I.",
+				"Charged melee hits heal you half a heart. At night: Night Vision and Speed I. In daylight under the open sky: Weakness I and Slowness I.",
 				p -> {
-					if (isNight(p)) return list(e(PotionEffectType.NIGHT_VISION, 1, 300), e(PotionEffectType.STRENGTH, 1, SHORT), e(PotionEffectType.SPEED, 1, SHORT));
+					if (isNight(p)) return list(e(PotionEffectType.NIGHT_VISION, 1, 300), e(PotionEffectType.SPEED, 1, SHORT));
 					if (underOpenSky(p)) return list(e(PotionEffectType.WEAKNESS, 1, SHORT), e(PotionEffectType.SLOWNESS, 1, SHORT));
 					return list();
 				});
