@@ -354,13 +354,21 @@ public final class MarketBoard implements TabExecutor {
 			return;
 		}
 
-		Map<String, Object> embed = changesEmbed(added, removed, changed, data.getString("note", ""));
-		String json = Json.write(message(List.of(embed)));
+		// One embed per message: Discord's 6,000-character limit covers every embed in a message.
+		List<String> posts = changesEmbeds(added, removed, changed, data.getString("note", "")).stream()
+				.map(e -> Json.write(message(List.of(e)))).toList();
 		List<String> newCatalog = catalog.saved();
 		Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-			boolean ok = send(() -> new Webhook(webhookUrl).post(json, null), "posting shop changes");
+			boolean ok = true;
+			for (String json : posts) {
+				if (!send(() -> new Webhook(webhookUrl).post(json, null), "posting shop changes")) {
+					ok = false;
+					break;
+				}
+			}
+			final boolean done = ok;
 			Bukkit.getScheduler().runTask(plugin, () -> {
-				if (!ok) return; // try again on the next reload or restart
+				if (!done) return; // try again on the next reload or restart
 				data.set("catalog", newCatalog);
 				data.set("note", null);
 				saveData();
@@ -381,7 +389,11 @@ public final class MarketBoard implements TabExecutor {
 		return p < 0 ? "not sold" : "$" + MONEY.format(p);
 	}
 
-	private Map<String, Object> changesEmbed(List<ShopCatalog.Item> added, List<ShopCatalog.Item> removed, List<String> changed, String note) {
+	/**
+	 * Every change listed in full. A long list is split over several fields, and the fields over
+	 * several embeds (Discord: 1,024 characters a field, 25 fields and 6,000 characters an embed).
+	 */
+	private List<Map<String, Object>> changesEmbeds(List<ShopCatalog.Item> added, List<ShopCatalog.Item> removed, List<String> changed, String note) {
 		List<Map<String, Object>> fields = new ArrayList<>();
 		if (!added.isEmpty()) {
 			List<String> lines = new ArrayList<>();
@@ -391,32 +403,55 @@ public final class MarketBoard implements TabExecutor {
 				if (i.sell() >= 0) prices.add("sell $" + MONEY.format(i.sell()));
 				lines.add("**" + escape(i.name()) + "**" + (prices.isEmpty() ? "" : " · " + String.join(" · ", prices)));
 			}
-			fields.add(field("🆕 New (" + added.size() + ")", fit(lines), false));
+			addFields(fields, "🆕 New (" + added.size() + ")", lines);
 		}
-		if (!changed.isEmpty()) fields.add(field("💲 New prices (" + changed.size() + ")", fit(changed), false));
-		if (!removed.isEmpty()) {
-			List<String> lines = removed.stream().map(i -> escape(i.name())).toList();
-			fields.add(field("🗑️ Removed (" + removed.size() + ")", fit(lines), false));
+		if (!changed.isEmpty()) addFields(fields, "💲 New prices (" + changed.size() + ")", changed);
+		if (!removed.isEmpty()) addFields(fields, "🗑️ Removed (" + removed.size() + ")", removed.stream().map(i -> escape(i.name())).toList());
+
+		String title = added.isEmpty() ? "🛒 Shop Update" : "🆕 New in the Shop";
+		String description = note != null && !note.isBlank() ? note.replace("\\n", "\n") : null;
+		List<Map<String, Object>> embeds = new ArrayList<>();
+		List<Map<String, Object>> page = new ArrayList<>();
+		int size = title.length() + (description == null ? 0 : description.length()) + 100;
+		for (Map<String, Object> f : fields) {
+			int fieldSize = ((String) f.get("name")).length() + ((String) f.get("value")).length();
+			if (!page.isEmpty() && (page.size() == 25 || size + fieldSize > 5800)) {
+				embeds.add(changesEmbed(embeds.isEmpty() ? title : null, embeds.isEmpty() ? description : null, page));
+				page = new ArrayList<>();
+				size = 100;
+			}
+			page.add(f);
+			size += fieldSize;
 		}
+		embeds.add(changesEmbed(embeds.isEmpty() ? title : null, embeds.isEmpty() ? description : null, page));
+		Map<String, Object> last = embeds.get(embeds.size() - 1);
+		last.put("footer", Map.of("text", "Open the shop with /shop"));
+		last.put("timestamp", Instant.now().toString());
+		return embeds;
+	}
+
+	private static Map<String, Object> changesEmbed(String title, String description, List<Map<String, Object>> fields) {
 		Map<String, Object> e = new LinkedHashMap<>();
-		e.put("title", added.isEmpty() ? "🛒 Shop Update" : "🆕 New in the Shop");
-		if (note != null && !note.isBlank()) e.put("description", note.replace("\\n", "\n"));
+		if (title != null) e.put("title", title);
+		if (description != null) e.put("description", description);
 		e.put("color", 0x2ECC71);
 		e.put("fields", fields);
-		e.put("footer", Map.of("text", "Open the shop with /shop"));
-		e.put("timestamp", Instant.now().toString());
 		return e;
 	}
 
-	/** Lines joined to fit a field, with "…and N more" when they don't. */
-	private static String fit(List<String> lines) {
+	/** The lines as one field, or as several (the later ones headed "… continued") when they don't fit in one. */
+	private static void addFields(List<Map<String, Object>> fields, String name, List<String> lines) {
 		StringBuilder out = new StringBuilder();
-		for (int i = 0; i < lines.size(); i++) {
-			String more = "…and " + (lines.size() - i) + " more";
-			if (out.length() + lines.get(i).length() + 1 + more.length() > FIELD_LIMIT) return out + more;
-			out.append(lines.get(i)).append('\n');
+		String heading = name;
+		for (String line : lines) {
+			if (!out.isEmpty() && out.length() + line.length() + 1 > FIELD_LIMIT) {
+				fields.add(field(heading, out.toString(), false));
+				out.setLength(0);
+				heading = name.replaceAll(" \\(\\d+\\)$", "") + " continued";
+			}
+			out.append(line).append('\n');
 		}
-		return out.toString();
+		fields.add(field(heading, out.toString(), false));
 	}
 
 	// ---------------------------------------------------------------- announcements

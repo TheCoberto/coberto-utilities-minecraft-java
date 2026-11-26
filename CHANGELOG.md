@@ -2,6 +2,9 @@
 
 Fabric mod versions (0.x) and the Paper plugin (`paper-plugin/`, "Paper x.y") are listed together, newest first.
 
+## Paper 1.12.1
+- **Market Board:** New in the Shop posts list every added, removed and repriced item instead of cutting off with "…and N more". Long lists carry on in extra fields, and in extra messages if they need to.
+
 ## Paper 1.12.0
 - **Leaderboard** (new): a Discord channel with one message that keeps itself up to date, showing the top 5 players in 💰 Richest, ⚔️ Player Kills, 🎯 Best KDR, 💀 Most Deaths, 🏡 Claim Blocks, ⏱️ Playtime, 🧟 Mob Kills, 🏃 Distance Traveled and 🎣 Fish Caught, with server totals on top. Counts offline players too.
 - Optional thread that announces every new #1 ("👑 X took #1 in Richest from Y").
