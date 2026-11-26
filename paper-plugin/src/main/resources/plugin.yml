@@ -2,8 +2,8 @@ name: CobertoUtilities
 version: '${version}'
 main: com.thecoberto.utilities.CobertoUtilities
 api-version: '1.21'
-softdepend: [Vault, Essentials, floodgate]
-description: Coberto's Utilities for Paper servers. Classes, Activity Rewards, Loot Crates, the Music Selector, the Odd Button, World Cleanup, /unload, Lumberjack and the Bedrock Menu.
+softdepend: [Vault, Essentials, floodgate, LuckPerms, SimpleClans]
+description: Coberto's Utilities for Paper servers. Classes, Activity Rewards, Loot Crates, the Music Selector, the Odd Button, World Cleanup, /unload, Lumberjack, the Bedrock Menu and the Kingdom Board (Discord).
 author: TheCoberto
 commands:
   class:
@@ -70,6 +70,10 @@ commands:
     usage: /lumberjack [on|off]
     aliases: [lj, treefeller]
     permission: cobertoutilities.lumberjack
+  kingdomboard:
+    description: The Discord Kingdom Board (factions and clans)
+    usage: /kingdomboard [status|refresh|repost|reload|webhook <url>]
+    permission: cobertoutilities.admin
 permissions:
   cobertoutilities.lumberjack:
     description: Use /lumberjack and fell whole trees

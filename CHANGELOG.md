@@ -2,6 +2,11 @@
 
 Fabric mod versions (0.x) and the Paper plugin (`paper-plugin/`, "Paper x.y") are listed together, newest first.
 
+## Paper 1.10.0
+- **Kingdom Board** (new): one Discord channel with a **Factions** message and a **Clans** message that update themselves in place, replacing the daily faction and clan posts. Factions show members (online ones in bold); clans show leaders, members, kills, deaths, KDR, bank, allies, rivals and founding date, biggest clan first.
+- Optional event feed in one shared thread, or separate Faction Changes and Clan Changes threads: faction joins and switches, new and disbanded clans, members joining and leaving, new leaders, alliances and rivalries.
+- Admin: `/kingdomboard status|refresh|repost|reload|webhook <url>`; settings in `kingdom-board.yml`.
+
 ## Paper 1.9.1
 - **Classes**: Vampire and Miner Night Vision no longer flickers. It stays steady while it applies and switches off cleanly at dawn (Vampire) or above Y 50 (Miner). Night Vision potions are left alone.
 

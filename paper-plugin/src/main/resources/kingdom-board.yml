@@ -1,0 +1,57 @@
+# Kingdom Board: a Discord channel with two messages that keep themselves up to date,
+# one for Factions and one for Clans, plus an optional thread of what changed.
+#
+# Setup:
+#  1. In Discord, make a read-only channel (like #kingdom-standings).
+#     Channel settings > Integrations > Webhooks > New Webhook > Copy Webhook URL.
+#  2. In the server console: /kingdomboard webhook <that URL>
+#     (It's saved in kingdom-board-data.yml, not here, so this file has no secrets.)
+#  3. Optional: make a thread in that channel for the event feed (or two: Faction Changes and
+#     Clan Changes), copy its ID (right-click > Copy Thread ID, with Developer Mode on) into
+#     events below, then /kingdomboard reload.
+#  4. Pin the two board messages.
+#
+# Commands (cobertoutilities.admin): /kingdomboard status|refresh|repost|reload|webhook <url>
+
+enabled: true
+
+# How often to check for changes. Discord is only contacted when something changed.
+refresh-seconds: 120
+
+webhook-name: "Kingdom Crobus"
+
+factions-title: "⚔️ Factions of Kingdom Crobus"
+factions-color: 0xF5A623
+clans-title: "🛡️ Clans of Kingdom Crobus"
+clans-color: 0x5865F2
+
+# Most clans on the board (biggest first); the rest are summed up as "...and N more". Discord allows 24.
+max-clans: 15
+
+# Each faction: the LuckPerms "faction" meta matches its id (any capitals, and "azure order" works too).
+# Players with one of its groups count as well, in case the meta wasn't set.
+factions:
+  azure:
+    name: "Azure Order"
+    emoji: "🔵"
+    groups: [azure_order]
+  crimson:
+    name: "Crimson Dominion"
+    emoji: "🔴"
+    groups: [crimson_dominion]
+  verdant:
+    name: "Verdant Syndicate"
+    emoji: "🟢"
+    groups: [verdant_syndicate]
+
+# The event feed: short lines like "Steve joined the Azure Order" posted to threads in the
+# webhook's channel, so the two boards stay at the top. Use one shared thread (thread-id),
+# or one thread each (factions-thread-id, clans-thread-id; these win over thread-id).
+# No thread set for a kind: those events aren't posted.
+events:
+  enabled: true
+  thread-id: ""
+  factions-thread-id: ""
+  clans-thread-id: ""
+  factions: true
+  clans: true

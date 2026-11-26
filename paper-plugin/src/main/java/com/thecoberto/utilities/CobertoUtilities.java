@@ -1,6 +1,7 @@
 package com.thecoberto.utilities;
 
 import com.thecoberto.utilities.classes.Classes;
+import com.thecoberto.utilities.kingdom.KingdomBoard;
 import com.thecoberto.utilities.music.MusicSelector;
 import com.thecoberto.utilities.prank.PrankButton;
 import net.kyori.adventure.text.Component;
@@ -42,6 +43,7 @@ public final class CobertoUtilities extends JavaPlugin implements TabExecutor {
 		new MenuSortGuard(this);
 		new Lumberjack(this);
 		new BedrockMenu(this); // the compass menu: a form on Bedrock (needs Floodgate), a chest menu on Java
+		new KingdomBoard(this); // factions and clans on Discord, through a webhook
 
 		getCommand("utilitiesgive").setExecutor(this);
 		getCommand("utilitiesgive").setTabCompleter(this);
