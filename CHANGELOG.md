@@ -2,6 +2,11 @@
 
 Fabric mod versions (0.x) and the Paper plugin (`paper-plugin/`, "Paper x.y") are listed together, newest first.
 
+## Paper 1.14.0
+- **Black Market** (new): **Shady Pete** appears in a puff of smoke at dusk at one of the saved spots (a different one each night, with a hint in chat) and vanishes at sunrise. Right-click him for a shop of 3-4 illegal goods with limited stock for the whole server: Moonshine (with a hangover), the Shiv (Sharpness VI, breaks fast), Smoke Bombs, Mystery Brews, Counterfeit Money and, rarely, a Bootleg Elytra. Sometimes he sells you dirt instead.
+- The Shiv and Bootleg Elytra can't be repaired in an anvil or mended.
+- `/blackmarket` (`/bm`) tells players where he was last seen. Admin: `addspot <name> <hint>`, `removespot`, `spots`, `open [spot]`, `close`, `status`, `price <item> <dollars>`; settings in `black-market.yml`.
+
 ## Paper 1.13.1
 - **Compass Menu Factions button** (new): opens the faction menu (`/faction_select`).
 - **Compass Menu Home button** now opens a list of your homes (`/homemenu`, a DeluxeMenus menu on the server) instead of teleporting straight to the first one.
