@@ -24,6 +24,7 @@ import org.bukkit.entity.WanderingTrader;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -245,10 +246,19 @@ public final class BlackMarket implements Listener, TabExecutor {
 			t.getPersistentDataContainer().set(npcKey, PersistentDataType.BYTE, (byte) 1);
 		});
 		npc = trader.getUniqueId();
+		if (!trader.isValid()) {
+			plugin.getLogger().warning("Another plugin stopped " + name() + " from spawning at Black Market spot " + spot + ". Pick a spot outside that protection.");
+		}
 		if (effects) {
 			Contraband.smoke(at, 1.0);
 			at.getWorld().playSound(at, Sound.ENTITY_ILLUSIONER_MIRROR_MOVE, 1f, 0.6f);
 		}
+	}
+
+	/** Spawn protection (WorldGuard mob-spawning: deny, with block-plugin-spawning) would cancel him at spots inside it. */
+	@EventHandler(priority = EventPriority.HIGHEST)
+	public void onDealerSpawn(CreatureSpawnEvent event) {
+		if (event.isCancelled() && isDealer(event.getEntity())) event.setCancelled(false);
 	}
 
 	@EventHandler
