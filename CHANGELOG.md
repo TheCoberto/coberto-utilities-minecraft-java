@@ -2,6 +2,18 @@
 
 Fabric mod versions (0.x) and the Paper plugin (`paper-plugin/`, "Paper x.y") are listed together, newest first.
 
+## Paper 1.15.0
+- **Clan Archive** (new): every clan is saved, so a deleted clan can come back with `/clanrestore`. If the inactivity purge deleted it, any of its old members can restore it and becomes its leader; if its players disbanded it, only an old leader can. Old leaders come back as leaders, and old members who aren't in another clan are added back with their ranks, alliances, rivalries, home and founding date. The bank starts empty.
+- Players with a clan they could restore are reminded when they join, with a clickable **[Restore]** button.
+- **Kingdom Board** posts "♻️ Clan … is back, restored by …" when a clan is restored.
+- Staff: `/clanrestore list`, `/clanrestore <tag> <player>` (works when the player is offline), `/clanrestore forget <tag>`.
+- Fixed: the plugin didn't load in 1.14.0 or 1.14.1 (the `/blackmarket` description broke `plugin.yml`).
+
+## Paper 1.14.1
+- **Unbreakable Anvil** (new): an anvil for Spawn and other public spots (`/utilitiesgive unbreakable_anvil`). It works like a normal anvil but never chips or breaks from use, doesn't fall, can't be blown up or pushed, and only admins can break it.
+- **Compass hint**: switching to a compass in your hotbar shows "Right-click to open the server menu" above the hotbar ("Sneak + right-click" for players with WorldEdit's compass wand).
+- **Compass Menu: 8 new buttons**: Random Teleport (`/tpr`), Server Shop (`/shop`), Auction House (`/ah`), Jobs (`/jobs browse`), Richest Players (`/baltop`), Black Market (`/blackmarket`), Clans (`/clan`) and Vein Miner On/Off (`/veinminer`).
+
 ## Paper 1.14.0
 - **Black Market** (new): **Shady Pete** appears in a puff of smoke at dusk at one of the saved spots (a different one each night, with a hint in chat) and vanishes at sunrise. Right-click him for a shop of 3-4 illegal goods with limited stock for the whole server: Moonshine (with a hangover), the Shiv (Sharpness VI, breaks fast), Smoke Bombs, Mystery Brews, Counterfeit Money and, rarely, a Bootleg Elytra. Sometimes he sells you dirt instead.
 - The Shiv and Bootleg Elytra can't be repaired in an anvil or mended.

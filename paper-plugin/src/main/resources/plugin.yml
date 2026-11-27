@@ -3,7 +3,7 @@ version: '${version}'
 main: com.thecoberto.utilities.CobertoUtilities
 api-version: '1.21'
 softdepend: [GriefPrevention, Vault, Essentials, floodgate, LuckPerms, SimpleClans, EconomyShopGUI, EconomyShopGUI-Premium]
-description: Coberto's Utilities for Paper servers. Classes, Activity Rewards, Loot Crates, the Music Selector, the Odd Button, World Cleanup, /unload, Lumberjack, the Bedrock Menu, the Black Market, and the Kingdom, Market and Leaderboard boards (Discord).
+description: Coberto's Utilities for Paper servers. Classes, Activity Rewards, Loot Crates, the Music Selector, the Odd Button, World Cleanup, /unload, Lumberjack, the Bedrock Menu, the Black Market, the Clan Archive (/clanrestore), and the Kingdom, Market and Leaderboard boards (Discord).
 author: TheCoberto
 commands:
   class:
@@ -15,8 +15,8 @@ commands:
     usage: /setclass <players> <class|none>
     permission: cobertoutilities.classes.admin
   utilitiesgive:
-    description: Give a Crate, Music Selector or Odd Button
-    usage: /utilitiesgive <crate|spooky_crate|holiday_crate|music_selector|prank_button> [player] [amount]
+    description: Give a Crate, Music Selector, Odd Button or Unbreakable Anvil
+    usage: /utilitiesgive <crate|spooky_crate|holiday_crate|music_selector|prank_button|unbreakable_anvil> [player] [amount]
     permission: cobertoutilities.admin
   activity:
     description: Turn Activity Rewards on or off, or see the settings
@@ -74,6 +74,10 @@ commands:
     description: The Discord Kingdom Board (factions and clans)
     usage: /kingdomboard [status|refresh|repost|reload|webhook <url>]
     permission: cobertoutilities.admin
+  clanrestore:
+    description: Bring back a deleted clan you were in (you become its leader)
+    usage: '/clanrestore [tag] (staff: list | <tag> <player> | forget <tag>)'
+    permission: cobertoutilities.clanrestore
   market:
     description: The Discord Market Board (shop board, trade feed, shop news)
     usage: /market [status|refresh|note <text>|announce <text>|repost|reload|webhook <url>]
@@ -87,7 +91,7 @@ commands:
     usage: /servermenu
     aliases: [smenu]
   blackmarket:
-    description: Where the Black Market dealer was last seen (admins: set his spots, prices and stock)
+    description: 'Where the Black Market dealer was last seen (admins: set his spots, prices and stock)'
     usage: /blackmarket [addspot|removespot|spots|open|close|status|price]
     aliases: [bm]
 permissions:
@@ -100,6 +104,9 @@ permissions:
   cobertoutilities.admin:
     description: Give special blocks and change Activity Rewards, crates, music and any Odd Button
     default: op
+  cobertoutilities.clanrestore:
+    description: Restore a deleted clan you were in with /clanrestore
+    default: true
   cobertoutilities.classes:
     description: Pick a class with /class
     default: true
