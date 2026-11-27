@@ -15,8 +15,8 @@ commands:
     usage: /setclass <players> <class|none>
     permission: cobertoutilities.classes.admin
   utilitiesgive:
-    description: Give a Crate, Music Selector or Odd Button
-    usage: /utilitiesgive <crate|spooky_crate|holiday_crate|music_selector|prank_button> [player] [amount]
+    description: Give a Crate, Music Selector, Odd Button or Unbreakable Anvil
+    usage: /utilitiesgive <crate|spooky_crate|holiday_crate|music_selector|prank_button|unbreakable_anvil> [player] [amount]
     permission: cobertoutilities.admin
   activity:
     description: Turn Activity Rewards on or off, or see the settings
