@@ -2,6 +2,10 @@
 
 Fabric mod versions (0.x) and the Paper plugin (`paper-plugin/`, "Paper x.y") are listed together, newest first.
 
+## Paper 1.13.1
+- **Compass Menu Factions button** (new): opens the faction menu (`/faction_select`).
+- **Compass Menu Home button** now opens a list of your homes (`/homemenu`, a DeluxeMenus menu on the server) instead of teleporting straight to the first one.
+
 ## Paper 1.13.0
 - **Compass Menu on Java** looks better: buttons sit centered inside a glass frame, with a **Close** button at the bottom and a click sound.
 - Hovering a button shows a short description of what it does (the new `description:` per button in `config.yml`, one line or a list).
