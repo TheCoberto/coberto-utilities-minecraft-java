@@ -32,8 +32,8 @@ bedrock_menu:
       image: textures/items/bed_red
       item: RED_BED
     - text: Home
-      command: home
-      description: Teleport to your home
+      command: homemenu
+      description: Pick one of your homes to teleport to
       image: textures/items/door_wood
       item: OAK_DOOR
     - text: Balance
@@ -46,6 +46,11 @@ bedrock_menu:
       description: Choose whether other players can fight you
       image: textures/items/diamond_sword
       item: DIAMOND_SWORD
+    - text: Factions
+      command: faction_select
+      description: Join or switch factions (first pick free, then $1000)
+      image: textures/items/banner_pattern
+      item: WHITE_BANNER
     - text: Pick a Class
       command: class
       description: Choose a class with its own perks
