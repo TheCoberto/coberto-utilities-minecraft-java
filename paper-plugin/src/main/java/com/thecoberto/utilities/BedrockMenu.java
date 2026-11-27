@@ -27,6 +27,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
@@ -167,6 +168,16 @@ public final class BedrockMenu implements Listener, CommandExecutor {
 
 		event.setCancelled(true);
 		open(player);
+	}
+
+	/** Switching to a compass shows a hint above the hotbar, so players know it opens the menu. */
+	@EventHandler(ignoreCancelled = true)
+	public void onHeld(PlayerItemHeldEvent event) {
+		Player player = event.getPlayer();
+		ItemStack item = player.getInventory().getItem(event.getNewSlot());
+		if (item == null || item.getType() != Material.COMPASS) return;
+		String how = !isBedrock(player) && player.hasPermission(WORLDEDIT_WAND) ? "Sneak + right-click" : "Right-click";
+		player.sendActionBar(Component.text(how + " to open the server menu", NamedTextColor.GOLD));
 	}
 
 	@EventHandler

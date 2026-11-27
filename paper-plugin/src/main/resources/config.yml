@@ -9,6 +9,7 @@ blocks:
   holiday_crate: SNOW_BLOCK
   music_selector: JUKEBOX
   prank_button: CRIMSON_BUTTON
+  unbreakable_anvil: ANVIL
 
 # Compass Menu: players right-click a compass to get this menu (a form on Bedrock,
 # a chest menu on Java). Each button
@@ -41,6 +42,41 @@ bedrock_menu:
       description: See how much money you have
       image: textures/items/gold_ingot
       item: GOLD_INGOT
+    - text: Random Teleport
+      command: tpr
+      description: Teleport to a random safe spot in the wild
+      image: textures/items/ender_pearl
+      item: ENDER_PEARL
+    - text: Server Shop
+      command: shop
+      description: Buy and sell items
+      image: textures/items/emerald
+      item: EMERALD
+    - text: Auction House
+      command: ah
+      description: Buy items other players are selling
+      image: textures/items/gold_nugget
+      item: GOLD_NUGGET
+    - text: Jobs
+      command: jobs browse
+      description: Join a job and get paid for what you do
+      image: textures/items/iron_pickaxe
+      item: IRON_PICKAXE
+    - text: Richest Players
+      command: baltop
+      description: See who has the most money
+      image: textures/items/diamond
+      item: DIAMOND
+    - text: Black Market
+      command: blackmarket
+      description: Where Shady Pete was last seen (he comes out at night)
+      image: textures/items/potion_bottle_drinkable
+      item: POTION
+    - text: Clans
+      command: clan
+      description: Make, join and manage clans
+      image: textures/items/name_tag
+      item: NAME_TAG
     - text: Peaceful or Fighter
       command: pvpmenu
       description: Choose whether other players can fight you
@@ -86,8 +122,13 @@ bedrock_menu:
       description: Switch to the best tool for each block
       image: textures/items/diamond_pickaxe
       item: DIAMOND_PICKAXE
+    - text: Vein Miner On/Off
+      command: veinminer
+      description: Mine a whole ore vein at once (Miner level 25)
+      image: textures/items/iron_pickaxe
+      item: GOLDEN_PICKAXE
     - text: Slots Leaderboard
       command: slotstop
       description: See the biggest slot machine winners
       image: textures/items/emerald
-      item: EMERALD
+      item: SUNFLOWER

@@ -26,6 +26,7 @@ import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
@@ -79,6 +80,11 @@ public final class SpecialBlocks implements Listener {
 		 * world can't pick it up. Building and mining around it still works.
 		 */
 		default boolean adminOnly() {
+			return false;
+		}
+
+		/** Right-clicking it does what the vanilla block does (opens the anvil, say) instead of {@link #use}. */
+		default boolean vanillaUse() {
 			return false;
 		}
 	}
@@ -210,7 +216,7 @@ public final class SpecialBlocks implements Listener {
 		if (event.getAction() != Action.RIGHT_CLICK_BLOCK || event.getHand() != EquipmentSlot.HAND) return;
 		Block block = event.getClickedBlock();
 		Kind kind = block == null ? null : kindAt(block);
-		if (kind == null) return;
+		if (kind == null || kind.vanillaUse()) return;
 		Player player = event.getPlayer();
 		ItemStack hand = player.getInventory().getItemInMainHand();
 		// Sneaking with a block in hand places it against the special block, like any other block.
@@ -288,6 +294,12 @@ public final class SpecialBlocks implements Listener {
 	@EventHandler(ignoreCancelled = true)
 	public void onBlockExplode(BlockExplodeEvent event) {
 		event.blockList().removeIf(b -> kindAt(b) != null || guarded(b));
+	}
+
+	/** An anvil starting to fall, or an enderman picking one up. */
+	@EventHandler(ignoreCancelled = true)
+	public void onEntityChangeBlock(EntityChangeBlockEvent event) {
+		if (kindAt(event.getBlock()) != null || guarded(event.getBlock())) event.setCancelled(true);
 	}
 
 	@EventHandler(ignoreCancelled = true)
