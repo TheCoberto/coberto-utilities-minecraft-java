@@ -2,6 +2,9 @@
 
 Fabric mod versions (0.x) and the Paper plugin (`paper-plugin/`, "Paper x.y") are listed together, newest first.
 
+## Paper 1.15.1
+- Fixed: the Black Market dealer never appeared at spots inside spawn protection (WorldGuard `mob-spawning: deny` cancelled him, but the smoke and chat hint still showed). He now appears there, and the console warns if another plugin still stops him.
+
 ## Paper 1.15.0
 - **Clan Archive** (new): every clan is saved, so a deleted clan can come back with `/clanrestore`. If the inactivity purge deleted it, any of its old members can restore it and becomes its leader; if its players disbanded it, only an old leader can. Old leaders come back as leaders, and old members who aren't in another clan are added back with their ranks, alliances, rivalries, home and founding date. The bank starts empty.
 - Players with a clan they could restore are reminded when they join, with a clickable **[Restore]** button.
