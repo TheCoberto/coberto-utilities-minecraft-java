@@ -255,8 +255,9 @@ public final class BlackMarket implements Listener, TabExecutor {
 		}
 	}
 
-	/** Spawn protection (WorldGuard mob-spawning: deny, with block-plugin-spawning) would cancel him at spots inside it. */
-	@EventHandler(priority = EventPriority.HIGHEST)
+	/** Spawn protection (WorldGuard mob-spawning: deny, with block-plugin-spawning) cancels him at spots inside it.
+	 *  WorldGuard cancels at HIGHEST and enables after us, so only MONITOR runs late enough; this touches nothing but the dealer. */
+	@EventHandler(priority = EventPriority.MONITOR)
 	public void onDealerSpawn(CreatureSpawnEvent event) {
 		if (event.isCancelled() && isDealer(event.getEntity())) event.setCancelled(false);
 	}
