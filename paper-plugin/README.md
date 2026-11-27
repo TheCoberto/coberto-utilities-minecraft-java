@@ -50,13 +50,22 @@ Two Discord messages, one for **Factions** and one for **Clans**, that a webhook
 
 Setup: make a webhook for the channel, run `/kingdomboard webhook <url>` in the console (stored in `kingdom-board-data.yml`, kept out of `kingdom-board.yml` because it's a secret), and pin the two messages. Settings, factions and the events thread are in `kingdom-board.yml`. `/kingdomboard status|refresh|repost|reload` (admin).
 
+## Clan Archive
+Keeps a copy of every SimpleClans clan in `clan-archive.yml` (tag, colors, name, description, members with their leader, trusted and rank, ranks, allies, rivals, home, bulletin board, founding date), refreshed every 5 minutes and when the server stops. When a clan disappears it's kept as **deleted**, so it can come back with `/clanrestore`:
+- Clans the SimpleClans inactivity purge deleted (it only purges while starting, so clans already gone at the first look after a restart) can be restored by **any** of their members at the time. Clans their players **disbanded** can only be restored by one of their old leaders.
+- Whoever restores it leads it; the old leaders come back as leaders too, and every old member who isn't in another clan now is added back with their rank. Alliances and rivalries come back with clans that still exist. The bank starts empty (so a clan can't disband and restore to copy its money), and the founding date stays the same.
+- Players who could restore a clan are reminded when they join, with a clickable **[Restore]**. `/clanrestore` lists theirs.
+- The Kingdom Board posts "♻️ Clan … is back, restored by …" instead of "New clan".
+
+Staff (`cobertoutilities.admin`): `/clanrestore list`, `/clanrestore <tag> <player>` (restores it with that player as leader, even offline), `/clanrestore forget <tag>`. A clan whose tag changed is followed to its new tag rather than kept as deleted.
+
 ## Market Board (Discord)
 The shop's Discord channel, for EconomyShopGUI. A board message a webhook keeps editing: today's trades and totals, most bought and sold items, top traders, and the items dynamic pricing has pushed down or up (compared with the prices in the shop files). **New in the Shop** posts go out by themselves when items are added, removed or repriced in the shop files (checked on start and whenever the shop reloads); `/market note <text>` adds your own words on top of the next one, and `/market announce <text>` posts a Shop Announcement. With a thread set, every trade goes to a feed there, gathered into one message a minute.
 
 Setup: make a webhook for the channel, run `/market webhook <url>` in the console (stored in `market-board-data.yml`), put the trade thread's ID in `market-board.yml`, and pin the board. EconomyShopGUI is read through its API by name, so it's optional at build and run time.
 
 ## Permissions
-`cobertoutilities.admin` (op by default) for `/utilitiesgive`, `/activity*`, `/crates`, `/music`, `/musicskip`, `/cleanup`, `/kingdomboard`, `/market` and changing any Prank Button. `cobertoutilities.classes.admin` (op by default) for `/class` and `/setclass`.
+`cobertoutilities.admin` (op by default) for `/utilitiesgive`, `/activity*`, `/crates`, `/music`, `/musicskip`, `/cleanup`, `/kingdomboard`, `/market` and changing any Prank Button. `cobertoutilities.classes.admin` (op by default) for `/class` and `/setclass`. `cobertoutilities.clanrestore` (everyone by default) for `/clanrestore`.
 
 If another plugin uses the same command name, use the `cobertoutilities:` prefix, like `/cobertoutilities:crates`.
 

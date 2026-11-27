@@ -50,6 +50,7 @@ public final class KingdomBoard implements TabExecutor {
 	private static final DecimalFormat KDR = new DecimalFormat("0.00");
 
 	private final JavaPlugin plugin;
+	private final ClanArchive archive;
 	private final File settingsFile, dataFile;
 	private YamlConfiguration settings, data;
 	private BukkitTask task;
@@ -58,8 +59,9 @@ public final class KingdomBoard implements TabExecutor {
 	private String lastFactionsJson, lastClansJson;
 	private String lastProblem;
 
-	public KingdomBoard(JavaPlugin plugin) {
+	public KingdomBoard(JavaPlugin plugin, ClanArchive archive) {
 		this.plugin = plugin;
+		this.archive = archive;
 		settingsFile = new File(plugin.getDataFolder(), "kingdom-board.yml");
 		dataFile = new File(plugin.getDataFolder(), "kingdom-board-data.yml");
 		if (!settingsFile.exists()) plugin.saveResource("kingdom-board.yml", false);
@@ -380,7 +382,13 @@ public final class KingdomBoard implements TabExecutor {
 				Snapshot.Clan old = before.clan(c.tag());
 				String label = "**[" + c.tag() + "] " + escape(c.name()) + "**";
 				if (old == null) {
-					out.add("🛡️ New clan " + label + (c.leaders().isEmpty() ? "" : ", led by " + escape(String.join(", ", c.leaders()))));
+					String restorer = archive == null ? null : archive.takeRestoredBy(c.tag());
+					if (restorer != null) {
+						out.add("♻️ Clan " + label + " is back, restored by **" + escape(restorer) + "**"
+								+ " · " + Msg.plural(c.members().size(), "member"));
+					} else {
+						out.add("🛡️ New clan " + label + (c.leaders().isEmpty() ? "" : ", led by " + escape(String.join(", ", c.leaders()))));
+					}
 					continue;
 				}
 				for (String m : c.members()) if (!old.members().contains(m)) out.add("➕ **" + escape(m) + "** joined " + label);

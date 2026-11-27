@@ -2,6 +2,7 @@ package com.thecoberto.utilities;
 
 import com.thecoberto.utilities.blackmarket.BlackMarket;
 import com.thecoberto.utilities.classes.Classes;
+import com.thecoberto.utilities.kingdom.ClanArchive;
 import com.thecoberto.utilities.kingdom.KingdomBoard;
 import com.thecoberto.utilities.leaderboard.Leaderboard;
 import com.thecoberto.utilities.market.MarketBoard;
@@ -26,6 +27,7 @@ import java.util.Locale;
  */
 public final class CobertoUtilities extends JavaPlugin implements TabExecutor {
 	private SpecialBlocks blocks;
+	private ClanArchive clanArchive;
 
 	@Override
 	public void onEnable() {
@@ -46,13 +48,20 @@ public final class CobertoUtilities extends JavaPlugin implements TabExecutor {
 		new MenuSortGuard(this);
 		new Lumberjack(this);
 		new BedrockMenu(this); // the compass menu: a form on Bedrock (needs Floodgate), a chest menu on Java
-		new KingdomBoard(this); // factions and clans on Discord, through a webhook
+		clanArchive = new ClanArchive(this); // a copy of every clan, so deleted ones can be restored
+		new KingdomBoard(this, clanArchive); // factions and clans on Discord, through a webhook
 		new MarketBoard(this); // the shop on Discord: board, trade feed, New in the Shop
 		new Leaderboard(this); // top players on Discord: money, kills, claims, playtime...
 		new BlackMarket(this); // the shady dealer who moves to a new spot every night
 
 		getCommand("utilitiesgive").setExecutor(this);
 		getCommand("utilitiesgive").setTabCompleter(this);
+	}
+
+	@Override
+	public void onDisable() {
+		// Utilities stops before SimpleClans (it soft-depends on it), so this is the last look at the clans.
+		if (clanArchive != null) clanArchive.snapshot();
 	}
 
 	/** /utilitiesgive <block> [player] [amount] */
