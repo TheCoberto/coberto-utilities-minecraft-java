@@ -2,6 +2,9 @@
 
 Fabric mod versions (0.x) and the Paper plugin (`paper-plugin/`, "Paper x.y") are listed together, newest first.
 
+## Paper 1.15.2
+- Fixed: 1.15.1's fix for the Black Market dealer at spots inside spawn protection ran before WorldGuard, which still cancelled him. It now runs last.
+
 ## Paper 1.15.1
 - Fixed: the Black Market dealer never appeared at spots inside spawn protection (WorldGuard `mob-spawning: deny` cancelled him, but the smoke and chat hint still showed). He now appears there, and the console warns if another plugin still stops him.
 
