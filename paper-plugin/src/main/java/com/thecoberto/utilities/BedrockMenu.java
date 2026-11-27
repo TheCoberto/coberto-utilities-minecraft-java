@@ -12,7 +12,12 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -37,21 +42,32 @@ import org.geysermc.floodgate.api.FloodgateApi;
 /**
  * Compass Menu (still called the Bedrock Menu in config.yml): a player
  * right-clicks a compass and gets a button for each handy command. Bedrock
- * players get a native Bedrock form; Java players get a chest menu. The buttons
- * come from the bedrock_menu section of config.yml.
+ * players get a native Bedrock form; Java players get a framed chest menu. The
+ * buttons come from the bedrock_menu section of config.yml. /servermenu opens
+ * it without a compass.
+ *
+ * Buttons may have a description (shown as lore on Java) and a permission
+ * (players without it don't see the button, on either edition).
  *
  * Players who can use WorldEdit's compass wand (operators) sneak + right-click
  * for the menu, so the wand still works.
  */
-public final class BedrockMenu implements Listener {
+public final class BedrockMenu implements Listener, CommandExecutor {
 	/** Bedrock sends a burst of interact packets for one tap. */
 	private static final long DEBOUNCE_MS = 600;
 	private static final String WORLDEDIT_WAND = "worldedit.navigation.thru.tool";
+	private static final Material FRAME = Material.GRAY_STAINED_GLASS_PANE;
+	private static final Material CLOSE = Material.BARRIER;
+	/** Buttons per row inside the frame. */
+	private static final int PER_ROW = 7;
 
-	private record Button(String text, String command, String image, Material item) {}
+	private record Button(String text, String command, String image, Material item, List<String> description,
+			String permission) {}
 
 	private static final class Holder implements InventoryHolder {
 		Inventory inventory;
+		final Map<Integer, Button> slots = new HashMap<>();
+		int closeSlot = -1;
 
 		@Override
 		public Inventory getInventory() {
@@ -71,6 +87,8 @@ public final class BedrockMenu implements Listener {
 		this.floodgate = Bukkit.getPluginManager().isPluginEnabled("floodgate");
 		load();
 		Bukkit.getPluginManager().registerEvents(this, plugin);
+		PluginCommand command = plugin.getCommand("servermenu");
+		if (command != null) command.setExecutor(this);
 	}
 
 	private void load() {
@@ -90,13 +108,42 @@ public final class BedrockMenu implements Listener {
 			Object itemName = entry.get("item");
 			Material item = itemName == null ? null : Material.matchMaterial(itemName.toString().toUpperCase(Locale.ROOT));
 			if (itemName != null && item == null) plugin.getLogger().warning("Unknown bedrock_menu item " + itemName + "; using paper.");
+			List<String> description = new ArrayList<>();
+			Object lore = entry.get("description");
+			if (lore instanceof List<?> lines) lines.forEach(line -> description.add(String.valueOf(line)));
+			else if (lore != null) description.add(lore.toString());
+			Object permission = entry.get("permission");
 			buttons.add(new Button(text.toString(), command.toString().replaceFirst("^/", ""),
-					image == null ? null : image.toString(), item == null || !item.isItem() ? Material.PAPER : item));
+					image == null ? null : image.toString(), item == null || !item.isItem() ? Material.PAPER : item,
+					description, permission == null ? null : permission.toString()));
 		}
 	}
 
 	private boolean isBedrock(Player player) {
 		return floodgate && FloodgateApi.getInstance().isFloodgatePlayer(player.getUniqueId());
+	}
+
+	private List<Button> visibleTo(Player player) {
+		List<Button> visible = new ArrayList<>();
+		for (Button button : buttons) {
+			if (button.permission() == null || player.hasPermission(button.permission())) visible.add(button);
+		}
+		return visible;
+	}
+
+	private void open(Player player) {
+		if (isBedrock(player)) openForm(player);
+		else openChest(player);
+	}
+
+	@Override
+	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+		if (!(sender instanceof Player player)) {
+			sender.sendMessage("Only players can open the menu.");
+			return true;
+		}
+		open(player);
+		return true;
 	}
 
 	@EventHandler(priority = EventPriority.LOW, ignoreCancelled = false)
@@ -119,8 +166,7 @@ public final class BedrockMenu implements Listener {
 		lastOpened.put(player.getUniqueId(), now);
 
 		event.setCancelled(true);
-		if (bedrock) openForm(player);
-		else openChest(player);
+		open(player);
 	}
 
 	@EventHandler
@@ -131,17 +177,18 @@ public final class BedrockMenu implements Listener {
 	// ---------- Bedrock ----------
 
 	private void openForm(Player player) {
-		if (buttons.isEmpty()) return;
+		List<Button> shown = visibleTo(player);
+		if (shown.isEmpty()) return;
 		SimpleForm.Builder form = SimpleForm.builder().title(title).content(content);
-		for (Button button : buttons) {
+		for (Button button : shown) {
 			if (button.image() == null) form.button(button.text());
 			else form.button(button.text(), button.image().startsWith("http") ? FormImage.Type.URL : FormImage.Type.PATH, button.image());
 		}
 		UUID id = player.getUniqueId();
 		form.validResultHandler(response -> {
 			int index = response.clickedButtonId();
-			if (index < 0 || index >= buttons.size()) return;
-			String command = buttons.get(index).command();
+			if (index < 0 || index >= shown.size()) return;
+			String command = shown.get(index).command();
 			// The response comes in off the main thread.
 			Bukkit.getScheduler().runTask(plugin, () -> {
 				Player online = Bukkit.getPlayer(id);
@@ -154,38 +201,75 @@ public final class BedrockMenu implements Listener {
 	// ---------- Java ----------
 
 	private void openChest(Player player) {
-		if (buttons.isEmpty()) return;
-		int rows = Math.min(6, (buttons.size() + 8) / 9);
+		List<Button> shown = visibleTo(player);
+		if (shown.isEmpty()) return;
 		Holder holder = new Holder();
+		// Framed: 7 buttons a row inside a glass border, each row centered, a close
+		// button in the bottom middle. Too many buttons for 6 rows? A plain grid.
+		int innerRows = (shown.size() + PER_ROW - 1) / PER_ROW;
+		boolean framed = innerRows <= 4;
+		int rows = framed ? innerRows + 2 : Math.min(6, (shown.size() + 8) / 9);
 		Inventory inventory = Bukkit.createInventory(holder, rows * 9, Component.text(title));
 		holder.inventory = inventory;
-		for (int i = 0; i < buttons.size() && i < rows * 9; i++) {
-			Button button = buttons.get(i);
-			ItemStack stack = new ItemStack(button.item());
-			ItemMeta meta = stack.getItemMeta();
-			meta.displayName(Component.text(button.text(), NamedTextColor.YELLOW).decoration(TextDecoration.ITALIC, false));
-			meta.lore(List.of(Component.text("/" + button.command(), NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false)));
-			meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
-			stack.setItemMeta(meta);
-			inventory.setItem(i, stack);
+		if (framed) {
+			ItemStack frame = icon(FRAME, Component.text(" "), List.of());
+			for (int slot = 0; slot < rows * 9; slot++) inventory.setItem(slot, frame);
+			for (int i = 0; i < shown.size(); i++) {
+				int row = i / PER_ROW;
+				int inRow = Math.min(PER_ROW, shown.size() - row * PER_ROW);
+				int column = 1 + (PER_ROW - inRow) / 2 + i % PER_ROW;
+				holder.slots.put((row + 1) * 9 + column, shown.get(i));
+			}
+			holder.closeSlot = (rows - 1) * 9 + 4;
+			inventory.setItem(holder.closeSlot, icon(CLOSE,
+					Component.text("Close", NamedTextColor.RED).decoration(TextDecoration.ITALIC, false), List.of()));
+		} else {
+			for (int i = 0; i < shown.size() && i < rows * 9; i++) holder.slots.put(i, shown.get(i));
 		}
+		holder.slots.forEach((slot, button) -> inventory.setItem(slot, buttonIcon(button)));
 		player.openInventory(inventory);
+		player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.4f, 1.3f);
+	}
+
+	private static ItemStack buttonIcon(Button button) {
+		List<Component> lore = new ArrayList<>();
+		for (String line : button.description()) {
+			lore.add(Component.text(line, NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
+		}
+		lore.add(Component.text("/" + button.command(), NamedTextColor.DARK_GRAY).decoration(TextDecoration.ITALIC, false));
+		return icon(button.item(), Component.text(button.text(), NamedTextColor.YELLOW)
+				.decoration(TextDecoration.ITALIC, false).decoration(TextDecoration.BOLD, true), lore);
+	}
+
+	private static ItemStack icon(Material material, Component name, List<Component> lore) {
+		ItemStack stack = new ItemStack(material);
+		ItemMeta meta = stack.getItemMeta();
+		meta.displayName(name);
+		meta.lore(lore);
+		meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
+		stack.setItemMeta(meta);
+		return stack;
 	}
 
 	@EventHandler
 	public void onClick(InventoryClickEvent event) {
-		if (!(event.getView().getTopInventory().getHolder() instanceof Holder)) return;
+		if (!(event.getView().getTopInventory().getHolder() instanceof Holder holder)) return;
 		event.setCancelled(true); // nothing in the menu (or the player's inventory, while it's open) moves
 		if (!(event.getWhoClicked() instanceof Player player)) return;
 		if (event.getClickedInventory() != event.getView().getTopInventory()) return;
 		int slot = event.getSlot();
-		if (slot < 0 || slot >= buttons.size()) return;
-		String command = buttons.get(slot).command();
 		// Close and run on the next tick: closing a menu inside its own click event isn't safe.
+		if (slot == holder.closeSlot) {
+			Bukkit.getScheduler().runTask(plugin, () -> player.closeInventory());
+			return;
+		}
+		Button button = holder.slots.get(slot);
+		if (button == null) return;
+		player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.4f, 1.0f);
 		Bukkit.getScheduler().runTask(plugin, () -> {
-			if (!(player.getOpenInventory().getTopInventory().getHolder() instanceof Holder)) return; // double click
+			if (player.getOpenInventory().getTopInventory().getHolder() != holder) return; // double click
 			player.closeInventory();
-			player.performCommand(command);
+			player.performCommand(button.command());
 		});
 	}
 

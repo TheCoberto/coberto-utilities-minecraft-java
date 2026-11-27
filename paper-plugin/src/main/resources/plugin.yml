@@ -82,6 +82,10 @@ commands:
     description: The Discord Leaderboard (top players in money, kills, claims, playtime...)
     usage: /leaderboard [status|refresh|repost|reload|webhook <url>]
     permission: cobertoutilities.admin
+  servermenu:
+    description: Open the Compass Menu without a compass
+    usage: /servermenu
+    aliases: [smenu]
 permissions:
   cobertoutilities.lumberjack:
     description: Use /lumberjack and fell whole trees

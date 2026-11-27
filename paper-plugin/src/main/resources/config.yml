@@ -12,7 +12,9 @@ blocks:
 
 # Compass Menu: players right-click a compass to get this menu (a form on Bedrock,
 # a chest menu on Java). Each button
-# runs its command as that player. item is the Java icon (a material name). image
+# runs its command as that player. item is the Java icon (a material name).
+# description is the optional hover text on Java (one line or a list), and
+# permission optionally hides the button from players without it. image
 # is the optional Bedrock icon: a Bedrock texture path
 # (like textures/items/compass_item) or an https:// link to a picture.
 bedrock_menu:
@@ -21,53 +23,66 @@ bedrock_menu:
   buttons:
     - text: What's New
       command: whatsnew
+      description: See the latest server updates
       image: textures/items/book_writable
       item: WRITABLE_BOOK
     - text: Spawn
       command: spawn
+      description: Teleport to spawn
       image: textures/items/bed_red
       item: RED_BED
     - text: Home
       command: home
+      description: Teleport to your home
       image: textures/items/door_wood
       item: OAK_DOOR
     - text: Balance
       command: bal
+      description: See how much money you have
       image: textures/items/gold_ingot
       item: GOLD_INGOT
     - text: Peaceful or Fighter
       command: pvpmenu
+      description: Choose whether other players can fight you
       image: textures/items/diamond_sword
       item: DIAMOND_SWORD
     - text: Pick a Class
       command: class
+      description: Choose a class with its own perks
       image: textures/items/nether_star
       item: NETHER_STAR
     - text: Unload into Chests
       command: unload
+      description: Put items into nearby chests that already hold them
       image: textures/blocks/chest_front
       item: CHEST
     - text: Dump into Chests
       command: dump
+      description: Empty your inventory into nearby chests
       image: textures/blocks/barrel_side
       item: BARREL
     - text: Chest Sorting
       command: chestsort
+      description: Turn automatic chest sorting on or off
       image: textures/items/hopper
       item: HOPPER
     - text: Lumberjack On/Off
       command: lumberjack
+      description: Chop a whole tree at once
       image: textures/items/iron_axe
       item: IRON_AXE
     - text: Hotbar Refill On/Off
       command: refill
+      description: Refill your hotbar when a stack runs out
       image: textures/blocks/hopper_top
       item: BUNDLE
     - text: Best Tools On/Off
       command: bt
+      description: Switch to the best tool for each block
       image: textures/items/diamond_pickaxe
       item: DIAMOND_PICKAXE
     - text: Slots Leaderboard
       command: slotstop
+      description: See the biggest slot machine winners
       image: textures/items/emerald
       item: EMERALD
