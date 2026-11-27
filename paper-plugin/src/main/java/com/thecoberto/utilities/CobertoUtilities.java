@@ -1,5 +1,6 @@
 package com.thecoberto.utilities;
 
+import com.thecoberto.utilities.blackmarket.BlackMarket;
 import com.thecoberto.utilities.classes.Classes;
 import com.thecoberto.utilities.kingdom.KingdomBoard;
 import com.thecoberto.utilities.leaderboard.Leaderboard;
@@ -48,6 +49,7 @@ public final class CobertoUtilities extends JavaPlugin implements TabExecutor {
 		new KingdomBoard(this); // factions and clans on Discord, through a webhook
 		new MarketBoard(this); // the shop on Discord: board, trade feed, New in the Shop
 		new Leaderboard(this); // top players on Discord: money, kills, claims, playtime...
+		new BlackMarket(this); // the shady dealer who moves to a new spot every night
 
 		getCommand("utilitiesgive").setExecutor(this);
 		getCommand("utilitiesgive").setTabCompleter(this);

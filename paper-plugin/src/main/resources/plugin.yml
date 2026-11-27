@@ -3,7 +3,7 @@ version: '${version}'
 main: com.thecoberto.utilities.CobertoUtilities
 api-version: '1.21'
 softdepend: [GriefPrevention, Vault, Essentials, floodgate, LuckPerms, SimpleClans, EconomyShopGUI, EconomyShopGUI-Premium]
-description: Coberto's Utilities for Paper servers. Classes, Activity Rewards, Loot Crates, the Music Selector, the Odd Button, World Cleanup, /unload, Lumberjack, the Bedrock Menu, and the Kingdom, Market and Leaderboard boards (Discord).
+description: Coberto's Utilities for Paper servers. Classes, Activity Rewards, Loot Crates, the Music Selector, the Odd Button, World Cleanup, /unload, Lumberjack, the Bedrock Menu, the Black Market, and the Kingdom, Market and Leaderboard boards (Discord).
 author: TheCoberto
 commands:
   class:
@@ -86,6 +86,10 @@ commands:
     description: Open the Compass Menu without a compass
     usage: /servermenu
     aliases: [smenu]
+  blackmarket:
+    description: Where the Black Market dealer was last seen (admins: set his spots, prices and stock)
+    usage: /blackmarket [addspot|removespot|spots|open|close|status|price]
+    aliases: [bm]
 permissions:
   cobertoutilities.lumberjack:
     description: Use /lumberjack and fell whole trees
