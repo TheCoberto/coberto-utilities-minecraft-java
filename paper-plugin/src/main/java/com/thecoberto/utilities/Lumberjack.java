@@ -34,12 +34,14 @@ import java.util.Set;
 /**
  * Lumberjack: chop one log of a tree with an axe and the rest of the tree comes down too.
  * Each log is broken as if the player broke it (claims and regions respected, the axe
- * wears per log, normal drops). Sneak to chop a single log; /lumberjack turns it off.
+ * wears per log, normal drops). Needs cobertoutilities.lumberjack, which
+ * the Woodcutter job grants at level 20 (Jobs woodcutter.yml). Sneak to chop a single log; /lumberjack turns it off.
  * Only natural trees: logs players placed are remembered and never chained, and the
  * logs must have natural leaves (or nether wart) touching them.
  */
 final class Lumberjack implements Listener, TabExecutor {
 	private static final int MAX_LOGS = 256;
+	private static final String PERMISSION = "cobertoutilities.lumberjack";
 
 	private final NamespacedKey offKey;
 	private final NamespacedKey placedKey;
@@ -57,6 +59,11 @@ final class Lumberjack implements Listener, TabExecutor {
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 		if (!(sender instanceof Player player)) {
 			Msg.error(sender, "Only players can use this.");
+			return true;
+		}
+		if (!player.hasPermission(PERMISSION)) {
+			player.sendMessage(Msg.prefix("Lumberjack:", NamedTextColor.GOLD).append(Component.text(
+					"Locked. Reach Woodcutter level 20 to unlock it (/jobs join Woodcutter).", NamedTextColor.GRAY)));
 			return true;
 		}
 		boolean on;
@@ -102,7 +109,7 @@ final class Lumberjack implements Listener, TabExecutor {
 		if (chopping || wasPlaced) return;
 
 		Player player = event.getPlayer();
-		if (player.isSneaking() || player.getGameMode() == GameMode.CREATIVE || !isOn(player)) return;
+		if (player.isSneaking() || player.getGameMode() == GameMode.CREATIVE || !isOn(player) || !player.hasPermission(PERMISSION)) return;
 		if (!isAxe(player.getInventory().getItemInMainHand())) return;
 
 		List<Block> tree = tree(block);
