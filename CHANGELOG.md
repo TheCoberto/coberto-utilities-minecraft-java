@@ -2,6 +2,9 @@
 
 Fabric mod versions (0.x) and the Paper plugin (`paper-plugin/`, "Paper x.y") are listed together, newest first.
 
+## Paper 1.16.0
+- **Lumberjack unlocks at Woodcutter level 20** (Jobs). It now needs `cobertoutilities.lumberjack`, which is off by default (ops have it); the Woodcutter job grants it from level 20. Without it, trees break one log at a time and `/lumberjack` says how to unlock it.
+
 ## Paper 1.15.2
 - Fixed: 1.15.1's fix for the Black Market dealer at spots inside spawn protection ran before WorldGuard, which still cancelled him. It now runs last.
 

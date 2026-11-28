@@ -69,7 +69,6 @@ commands:
     description: Turn Lumberjack (chop a whole tree at once) on or off
     usage: /lumberjack [on|off]
     aliases: [lj, treefeller]
-    permission: cobertoutilities.lumberjack
   kingdomboard:
     description: The Discord Kingdom Board (factions and clans)
     usage: /kingdomboard [status|refresh|repost|reload|webhook <url>]
@@ -96,8 +95,8 @@ commands:
     aliases: [bm]
 permissions:
   cobertoutilities.lumberjack:
-    description: Use /lumberjack and fell whole trees
-    default: true
+    description: Fell whole trees with Lumberjack (the Woodcutter job grants it at level 20)
+    default: op
   cobertoutilities.unload:
     description: Use /unload and /dump
     default: true
