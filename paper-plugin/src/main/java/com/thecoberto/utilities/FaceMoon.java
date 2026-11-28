@@ -48,7 +48,8 @@ public final class FaceMoon implements Listener, TabExecutor {
 		y.options().setHeader(List.of(
 			"Face Moon: on some nights the moon becomes TheCoberto's face.",
 			"Java players get the pack at dusk. Bedrock players (Geyser) get bedrock_pack_url when they",
-			"join during a face night, so ones already online see it after they rejoin.",
+			"join during a face night, so ones already online see it after they rejoin. bedrock_pack_url is a",
+			"file in this folder (FaceMoonPack.mcpack) or an https:// link served as application/zip.",
 			"Change these with /facemoon, or edit this file and run /facemoon reload.",
 			"mode: random (chance each night, with at least min_gap plain nights between),",
 			"      every (every N nights), or phases (on these moon phases: " + String.join(", ", PHASES) + ").",
@@ -65,7 +66,7 @@ public final class FaceMoon implements Listener, TabExecutor {
 		y.addDefault("prompt", "The moon looks... different tonight.");
 		y.addDefault("pack_url", "https://github.com/TheCoberto/server-resource-pack/releases/download/v1.2.0/FaceMoonPack.zip");
 		y.addDefault("pack_sha1", "8de05aab58b5de90df1cffb8cb9c4e031372b563");
-		y.addDefault("bedrock_pack_url", "https://github.com/TheCoberto/server-resource-pack/releases/download/v1.2.0/FaceMoonPack.mcpack");
+		y.addDefault("bedrock_pack_url", "FaceMoonPack.mcpack"); // a file in this folder, or an https:// link served as application/zip
 		y.addDefault("bedrock_rejoin_hint", "&8&o(Bedrock: rejoin to see the moon tonight.)");
 		y.options().copyDefaults(true);
 		store.save();

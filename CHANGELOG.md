@@ -2,6 +2,9 @@
 
 Fabric mod versions (0.x) and the Paper plugin (`paper-plugin/`, "Paper x.y") are listed together, newest first.
 
+## Paper 1.17.1
+- Fixed: Face Moon couldn't load the Bedrock pack from GitHub (Geyser refuses `.mcpack` links served as `application/octet-stream`). `bedrock_pack_url` can now be a file in the plugin folder, and defaults to `FaceMoonPack.mcpack` there.
+
 ## Paper 1.17.0
 - **Face Moon** (new): on some nights the moon turns into TheCoberto's face. At dusk the plugin picks whether it's a face night and sends Java players a small resource pack, then takes it away at sunrise. Bedrock players who join during a face night get it too (Geyser only sends packs at join, so Bedrock players already online see it after they rejoin, and are told so in chat).
 - Pick how often with `/facemoon mode`: `random` (a chance each night, `/facemoon chance <percent>`, with at least `/facemoon gap <nights>` plain nights between), `every` (`/facemoon every <nights>`), or `phases` (`/facemoon phases full waning_crescent ...`).

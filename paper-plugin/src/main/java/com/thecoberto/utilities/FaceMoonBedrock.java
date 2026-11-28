@@ -26,13 +26,19 @@ final class FaceMoonBedrock {
 		});
 	}
 
-	/** Loads (Geyser downloads and caches) the Bedrock pack at this URL. Blank turns Bedrock off. */
+	/**
+	 * Loads the Bedrock pack: a file in the plugin's folder, or an https:// link (which must be
+	 * served as application/zip; GitHub serves .mcpack files as octet-stream, which Geyser refuses).
+	 * Blank turns Bedrock off.
+	 */
 	void setUrl(JavaPlugin plugin, String newUrl) {
 		if (newUrl == null || newUrl.isBlank()) { pack = null; url = null; return; }
 		if (newUrl.equals(url)) return;
 		url = newUrl;
 		try {
-			pack = ResourcePack.create(PackCodec.url(newUrl));
+			pack = ResourcePack.create(newUrl.startsWith("http")
+				? PackCodec.url(newUrl)
+				: PackCodec.path(plugin.getDataFolder().toPath().resolve(newUrl)));
 		} catch (Exception e) {
 			pack = null;
 			plugin.getLogger().log(Level.WARNING, "Face Moon: couldn't load the Bedrock pack from " + newUrl, e);
