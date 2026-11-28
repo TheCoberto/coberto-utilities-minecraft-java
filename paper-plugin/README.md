@@ -59,6 +59,11 @@ Keeps a copy of every SimpleClans clan in `clan-archive.yml` (tag, colors, name,
 
 Staff (`cobertoutilities.admin`): `/clanrestore list`, `/clanrestore <tag> <player>` (restores it with that player as leader, even offline), `/clanrestore forget <tag>`. A clan whose tag changed is followed to its new tag rather than kept as deleted.
 
+## Face Moon
+On random nights the moon becomes TheCoberto's face. At dusk the plugin decides if it's a face night and sends Java players `FaceMoonPack.zip` (from the server-resource-pack releases), then removes it at sunrise. Bedrock players get `FaceMoonPack.mcpack` from the plugin folder through Geyser when they join during a face night (Geyser only sends packs at join); ones already online get a rejoin hint.
+
+Staff (`cobertoutilities.admin`): `/facemoon` shows the settings. `mode random|every|phases`, `chance <percent>`, `gap <nights>`, `every <nights>`, `phases <names...>`, `now`, `stop`, `tonight`, `skip`, `announce <message|none>`, `pack <url> <sha1>`, `on`, `off`, `reload`. Settings are in `face-moon.yml`.
+
 ## Market Board (Discord)
 The shop's Discord channel, for EconomyShopGUI. A board message a webhook keeps editing: today's trades and totals, most bought and sold items, top traders, and the items dynamic pricing has pushed down or up (compared with the prices in the shop files). **New in the Shop** posts go out by themselves when items are added, removed or repriced in the shop files (checked on start and whenever the shop reloads); `/market note <text>` adds your own words on top of the next one, and `/market announce <text>` posts a Shop Announcement. With a thread set, every trade goes to a feed there, gathered into one message a minute.
 
