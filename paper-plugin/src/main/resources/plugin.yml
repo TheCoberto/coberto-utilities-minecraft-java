@@ -2,8 +2,8 @@ name: CobertoUtilities
 version: '${version}'
 main: com.thecoberto.utilities.CobertoUtilities
 api-version: '1.21'
-softdepend: [GriefPrevention, Vault, Essentials, floodgate, LuckPerms, SimpleClans, EconomyShopGUI, EconomyShopGUI-Premium]
-description: Coberto's Utilities for Paper servers. Classes, Activity Rewards, Loot Crates, the Music Selector, the Odd Button, World Cleanup, /unload, Lumberjack, the Bedrock Menu, the Black Market, the Clan Archive (/clanrestore), and the Kingdom, Market and Leaderboard boards (Discord).
+softdepend: [GriefPrevention, Vault, Essentials, floodgate, Geyser-Spigot, LuckPerms, SimpleClans, EconomyShopGUI, EconomyShopGUI-Premium]
+description: Coberto's Utilities for Paper servers. Classes, Activity Rewards, Loot Crates, the Music Selector, the Odd Button, World Cleanup, /unload, Lumberjack, the Bedrock Menu, the Black Market, the Face Moon, the Clan Archive (/clanrestore), and the Kingdom, Market and Leaderboard boards (Discord).
 author: TheCoberto
 commands:
   class:
@@ -93,6 +93,10 @@ commands:
     description: 'Where the Black Market dealer was last seen (admins: set his spots, prices and stock)'
     usage: /blackmarket [addspot|removespot|spots|open|close|status|price]
     aliases: [bm]
+  facemoon:
+    description: Face Moon settings (some nights the moon is TheCoberto's face)
+    usage: /facemoon [status|on|off|now|stop|tonight|skip|mode|chance|gap|every|phases|announce|pack|reload]
+    permission: cobertoutilities.admin
 permissions:
   cobertoutilities.lumberjack:
     description: Fell whole trees with Lumberjack (the Woodcutter job grants it at level 20)

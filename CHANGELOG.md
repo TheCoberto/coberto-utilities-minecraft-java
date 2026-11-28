@@ -2,6 +2,11 @@
 
 Fabric mod versions (0.x) and the Paper plugin (`paper-plugin/`, "Paper x.y") are listed together, newest first.
 
+## Paper 1.17.0
+- **Face Moon** (new): on some nights the moon turns into TheCoberto's face. At dusk the plugin picks whether it's a face night and sends Java players a small resource pack, then takes it away at sunrise. Bedrock players who join during a face night get it too (Geyser only sends packs at join, so Bedrock players already online see it after they rejoin, and are told so in chat).
+- Pick how often with `/facemoon mode`: `random` (a chance each night, `/facemoon chance <percent>`, with at least `/facemoon gap <nights>` plain nights between), `every` (`/facemoon every <nights>`), or `phases` (`/facemoon phases full waning_crescent ...`).
+- Staff: `/facemoon` shows the settings and tonight's moon. `now` / `stop` turn the face on or off right away, `tonight` / `skip` force the next night, `announce <message|none>` sets the dusk chat message, `pack <url> <sha1>` sets the pack, `on` / `off`, and `reload` after editing `face-moon.yml`.
+
 ## Paper 1.16.0
 - **Lumberjack unlocks at Woodcutter level 20** (Jobs). It now needs `cobertoutilities.lumberjack`, which is off by default (ops have it); the Woodcutter job grants it from level 20. Without it, trees break one log at a time and `/lumberjack` says how to unlock it.
 

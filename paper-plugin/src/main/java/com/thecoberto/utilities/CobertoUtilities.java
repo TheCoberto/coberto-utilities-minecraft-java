@@ -54,6 +54,7 @@ public final class CobertoUtilities extends JavaPlugin implements TabExecutor {
 		new MarketBoard(this); // the shop on Discord: board, trade feed, New in the Shop
 		new Leaderboard(this); // top players on Discord: money, kills, claims, playtime...
 		new BlackMarket(this); // the shady dealer who moves to a new spot every night
+		new FaceMoon(this); // some nights the moon is TheCoberto's face (a pack sent to Java players)
 
 		getCommand("utilitiesgive").setExecutor(this);
 		getCommand("utilitiesgive").setTabCompleter(this);
